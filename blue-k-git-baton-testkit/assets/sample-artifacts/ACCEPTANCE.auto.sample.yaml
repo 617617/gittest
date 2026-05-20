@@ -1,0 +1,16 @@
+TopicId: code-main-03-1111111
+Kind: code
+Mode: light
+Status: accepted
+SubjectCommit: "1111111"
+AcceptanceCommit: "9999999"
+AutoAccepted: true
+AcceptanceHash: acceptance-1111111
+DocsOnlyFreeze:
+  allowedPath: docs/mian-k/_consensus/code-main-03-1111111/**
+  verdict: PASS
+NextLane:
+  lane: blue-k-main-runner
+  action: finalize_review_pending_only
+  progressFile: docs/mian-k/MAIN_PACKAGE_PROGRESS.md
+  progressRowId: main:03

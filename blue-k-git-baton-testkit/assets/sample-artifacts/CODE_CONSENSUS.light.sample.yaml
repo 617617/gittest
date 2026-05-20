@@ -1,0 +1,27 @@
+TopicId: code-main-03-1111111
+Kind: code
+Mode: light
+Status: accepted
+SubjectCommit: "1111111"
+WorkBranch: blue-k/k1
+LowerGateEvidence:
+  - kind: traceable-review
+    commit: "1111111"
+    path: docs/mian-k/main/03_rules/TRACEABLE_REVIEW.md
+    blob: blob-traceable-review-1111111
+    verdict: PASS
+  - kind: code-graph-package-gate
+    commit: "1111111"
+    path: .crg/gates/package-main-03/COMMIT_GRAPH_GATE.json
+    blob: blob-graph-gate-1111111
+    verdict: PASS
+RoleSignals:
+  - role: cc
+    verdict: PASS
+    summary: architecture drift none
+  - role: codex
+    verdict: PASS
+    summary: tests, gates, and evidence ok
+LiveOpinionsHash: live-opinions-1111111
+AcceptanceHash: acceptance-1111111
+AutoAccepted: true

@@ -1,6 +1,6 @@
 ---
 name: blue-k-git-baton-testkit
-description: Test and review a simulated Blue-K Git baton protocol for cross-machine CC/Codex coordination. Use when validating the two-entry workflow `bk sync` plus AI chat `/bk work`, coordination-branch BATON semantics, lease/takeover rules, runner assignment boundaries, or handoff readiness for repository 617617/gittest.
+description: Test and review a simulated Blue-K Git baton protocol for cross-machine CC/Codex coordination. Use when validating the two-entry workflow `bk sync` plus AI chat `/bk work`, coordination-branch BATON semantics, lease/takeover rules, runner assignment boundaries, plan/code consensus gates, or handoff readiness for repository 617617/gittest.
 ---
 
 # Blue-K Git Baton Testkit
@@ -23,7 +23,7 @@ control-plane decisions that decide whether another AI should run `bk sync` or
 ## Quick Start
 
 1. Read `HANDOFF.md` first when acting as the other AI.
-2. Read `references/protocol-v0.5.md` before changing the protocol.
+2. Read `references/protocol-v0.9.md` before changing the protocol.
 3. Run the simulator:
 
 ```powershell
@@ -59,6 +59,14 @@ The simulator intentionally covers edge cases:
 - atomic push unavailable;
 - role mismatch;
 - coordination/work branch race.
+- plan consensus after audit;
+- code consensus after runner checkpoint;
+- docs-only consensus freeze;
+- stale consensus-topic invalidation;
+- runner `review_pending` finalization;
+- runner-owned fix lanes;
+- dependency recovery fix target ownership;
+- human-blocked decisions.
 
 ## Hard Rules
 
@@ -74,11 +82,19 @@ The simulator intentionally covers edge cases:
 - A competing different running lane/package is a blocker.
 - Wrapper must not select packages, write progress tables, run stage-loop-auto,
   run code graph gates, or create runner checkpoint commits.
+- Plan output must pass a consensus synthesis before runner execution.
+- Code/package output must pass a consensus review before runner finalization.
+- Lower-gate `BLOCK` cannot be converted to `PASS` by consensus or human risk
+  acceptance.
+- Consensus topics become invalid when a new subject commit appears.
+- Between subject and acceptance commits, only the topic directory under
+  `docs/mian-k/_consensus/<topic-id>/` may change.
 
 ## Resources
 
 - `HANDOFF.md`: short handoff for the other AI.
-- `references/protocol-v0.5.md`: protocol specification under test.
+- `references/protocol-v0.9.md`: current protocol specification under test.
+- `references/protocol-v0.5.md`: earlier baseline retained for comparison.
 - `references/scenario-matrix.md`: expected decision matrix.
 - `scripts/bk_sync_sim.py`: deterministic decision simulator.
 - `assets/sample-artifacts/`: sample BATON/progress/audit files for inspection.

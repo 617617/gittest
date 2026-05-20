@@ -1,0 +1,13 @@
+TopicId: code-other-07-1111111
+Kind: code
+Mode: full
+Status: fix_required
+SubjectCommit: "1111111"
+SubjectPackage: docs/mian-k/other/07_sidequest
+ActivePackage: docs/mian-k/other/07_sidequest
+DependencyRecoveryTarget: docs/mian-k/main/02_prereq
+FixTarget: both
+ProgressFile: docs/mian-k/OTHER_MIN_PACKAGE_PROGRESS.md
+ProgressRowId: other:07
+FindingSetCommit: "7777777"
+Reason: active package and prerequisite package both affect the failing review finding

@@ -8,11 +8,12 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass, replace
-from typing import Callable, Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional, Tuple
 
 
 GOOD_WORK_HEAD = "1111111"
 REMOTE_WORK_HEAD_CHANGED = "2222222"
+NEW_SUBJECT_HEAD = "3333333"
 LOCAL_OLD_HEAD = "0000000"
 COORD_HEAD = "aaaaaaa"
 
@@ -48,6 +49,29 @@ class Scenario:
     state_conflict: bool = False
     strict_shape_ok: bool = True
     warn_accepted: bool = True
+    consensus_kind: str = "none"
+    consensus_mode: str = "none"
+    consensus_status: str = "none"
+    topic_status: str = "none"
+    subject_commit: str = GOOD_WORK_HEAD
+    acceptance_subject_commit: Optional[str] = None
+    auto_accepted: bool = False
+    acceptance_hash_ok: bool = True
+    docs_only_freeze_ok: bool = True
+    lower_gates_ok: bool = True
+    lower_gate_block: bool = False
+    live_opinions_ok: bool = True
+    waiver_used: bool = False
+    role_signals_pass: bool = True
+    review_status: str = ""
+    human_decision: Optional[str] = None
+    fix_target: Optional[str] = None
+    active_package: Optional[str] = None
+    dependency_recovery_target: Optional[str] = None
+    progress_row_id: Optional[str] = None
+    finding_set_commit: Optional[str] = None
+    full_mode_reason: Optional[str] = None
+    consensus_dirty: bool = False
 
 
 @dataclass(frozen=True)
@@ -61,6 +85,7 @@ class Decision:
     failure_code: Optional[str] = None
     remote_takeover_allowed: str = "no"
     takeover_basis: str = "not requested"
+    extra_lines: Tuple[str, ...] = ()
 
     def render(self, scenario: Scenario) -> str:
         lines = [
@@ -72,6 +97,9 @@ class Decision:
             f"SAFE_POINT: origin/blue-k/k1@{self.safe_point}",
             f"STOP_IF: {self.stop_if}",
         ]
+        if has_consensus_info(scenario):
+            lines.extend(consensus_lines(scenario))
+        lines.extend(self.extra_lines)
         if self.failure_code:
             lines.extend(
                 [
@@ -104,6 +132,52 @@ def progress_file(lane: str) -> str:
     return "-"
 
 
+def has_consensus_info(scenario: Scenario) -> bool:
+    return (
+        scenario.consensus_kind != "none"
+        or scenario.consensus_mode != "none"
+        or scenario.consensus_status != "none"
+        or scenario.topic_status != "none"
+        or bool(scenario.review_status)
+        or bool(scenario.human_decision)
+        or bool(scenario.fix_target)
+        or bool(scenario.dependency_recovery_target)
+        or scenario.consensus_dirty
+    )
+
+
+def consensus_lines(scenario: Scenario) -> List[str]:
+    acceptance_subject = scenario.acceptance_subject_commit or "-"
+    lines = [
+        f"ConsensusKind: {scenario.consensus_kind}",
+        f"ConsensusMode: {scenario.consensus_mode}",
+        f"ConsensusStatus: {scenario.consensus_status}",
+        f"TopicStatus: {scenario.topic_status}",
+        f"SubjectCommit: {scenario.subject_commit}",
+        f"AcceptanceSubjectCommit: {acceptance_subject}",
+        f"AutoAccepted: {str(scenario.auto_accepted).lower()}",
+    ]
+    if scenario.full_mode_reason:
+        lines.append(f"FullModeReason: {scenario.full_mode_reason}")
+    if scenario.review_status:
+        lines.append(f"ReviewStatus: {scenario.review_status}")
+    if scenario.human_decision:
+        lines.append(f"HumanDecision: {scenario.human_decision}")
+    if scenario.active_package:
+        lines.append(f"ActivePackage: {scenario.active_package}")
+    if scenario.dependency_recovery_target:
+        lines.append(
+            f"DependencyRecoveryTarget: {scenario.dependency_recovery_target}"
+        )
+    if scenario.fix_target:
+        lines.append(f"FixTarget: {scenario.fix_target}")
+    if scenario.progress_row_id:
+        lines.append(f"ProgressRowId: {scenario.progress_row_id}")
+    if scenario.finding_set_commit:
+        lines.append(f"FindingSetCommit: {scenario.finding_set_commit}")
+    return lines
+
+
 def unpushed_summary(scenario: Scenario) -> str:
     if scenario.local_head != scenario.origin_work_head:
         return f"{scenario.origin_work_head}..{scenario.local_head}"
@@ -119,6 +193,9 @@ def command_from_next(next_line: str) -> str:
 
 
 def unit_for(scenario: Scenario) -> str:
+    consensus_unit = consensus_unit_for(scenario)
+    if consensus_unit:
+        return consensus_unit
     if scenario.lane == "blue-k-main-runner":
         return "blue-k-main-runner will select/resume from MAIN_PACKAGE_PROGRESS.md"
     if scenario.lane == "blue-k-other-runner":
@@ -131,6 +208,28 @@ def unit_for(scenario: Scenario) -> str:
     if scenario.lane == "blue-k-plan-audit":
         return "blue-k-plan-audit continuation"
     return scenario.lane
+
+
+def consensus_unit_for(scenario: Scenario) -> str:
+    if scenario.consensus_kind == "plan" and scenario.consensus_status == "needed":
+        return (
+            "blue-k-consensus plan synthesis; write docs under "
+            "docs/mian-k/_consensus/<topic-id>/ only"
+        )
+    if scenario.consensus_kind == "code" and scenario.consensus_status == "needed":
+        return (
+            "blue-k-consensus code review; bind runner checkpoint, lower gates, "
+            "LIVE_OPINIONS, and AcceptanceHash"
+        )
+    if scenario.review_status == "review_pending" and scenario.consensus_status == "accepted":
+        return "runner finalize current review_pending row only, then stop"
+    if scenario.consensus_status == "fix_required":
+        return "runner-owned fix lane; wrapper must not preselect packages"
+    if scenario.human_decision == "request_code_fix":
+        return "runner-owned fix lane requested by human decision"
+    if scenario.human_decision == "request_plan_revision":
+        return "blue-k-planner plan revision requested by human decision"
+    return ""
 
 
 def lock_for(scenario: Scenario) -> str:
@@ -153,6 +252,147 @@ def block(scenario: Scenario, code: str, why: str) -> Decision:
     )
 
 
+def consensus_blocker(scenario: Scenario) -> Optional[Tuple[str, str]]:
+    if scenario.lower_gate_block:
+        return (
+            "LOWER_GATE_BLOCK_CANNOT_BE_ACCEPTED",
+            "lower-gate BLOCK must return to planner repair or runner fix",
+        )
+    if scenario.consensus_dirty:
+        return (
+            "CONSENSUS_DIRTY_DRAFT",
+            "dirty or unpushed consensus draft cannot authorize runner start",
+        )
+    if not scenario.docs_only_freeze_ok:
+        return (
+            "CONSENSUS_FREEZE_VIOLATION",
+            "non-consensus files changed between SubjectCommit and AcceptanceCommit",
+        )
+    if not scenario.acceptance_hash_ok:
+        return (
+            "ACCEPTANCE_HASH_MISMATCH",
+            "canonical AcceptanceHash does not match exact commit blobs",
+        )
+    if not scenario.live_opinions_ok:
+        return (
+            "LIVE_OPINIONS_HASH_MISMATCH",
+            "LIVE_OPINIONS or closure marker is not bound by AcceptanceHash",
+        )
+    if scenario.topic_status == "superseded":
+        return (
+            "CONSENSUS_TOPIC_SUPERSEDED",
+            "a newer SubjectCommit superseded this consensus topic",
+        )
+    if scenario.topic_status == "cancelled":
+        return (
+            "CONSENSUS_TOPIC_CANCELLED",
+            "human cancelled the topic; wait for new instruction",
+        )
+    if scenario.consensus_status == "accepted" and not scenario.acceptance_subject_commit:
+        return (
+            "ACCEPTANCE_SUBJECT_COMMIT_REQUIRED",
+            "accepted consensus must bind the accepted subject commit",
+        )
+    if (
+        scenario.consensus_status == "accepted"
+        and scenario.acceptance_subject_commit
+        and scenario.acceptance_subject_commit != scenario.subject_commit
+    ):
+        return (
+            "ACCEPTANCE_SUBJECT_COMMIT_MISMATCH",
+            "accepted consensus binds an old subject commit",
+        )
+    if scenario.auto_accepted and (
+        scenario.consensus_mode != "light"
+        or scenario.waiver_used
+        or not scenario.role_signals_pass
+        or not scenario.lower_gates_ok
+    ):
+        return (
+            "AUTO_ACCEPT_NOT_ALLOWED",
+            "light auto-accept requires PASS role signals, PASS lower gates, and no waiver",
+        )
+    if scenario.consensus_status == "fix_required":
+        if not scenario.finding_set_commit:
+            return (
+                "FINDING_SET_REQUIRED",
+                "fix_required must bind the review finding set commit",
+            )
+        if scenario.lane == "blue-k-other-runner" and not scenario.fix_target:
+            return (
+                "FIX_TARGET_REQUIRED",
+                "other-runner dependency recovery fix must bind FixTarget",
+            )
+    if scenario.review_status == "review_failed":
+        return (
+            "REVIEW_FAILED_NEEDS_DECISION",
+            "failed review must route to retry_fix, planner_repair, or human_blocked",
+        )
+    if scenario.human_decision == "accept_risk" and (
+        scenario.lower_gate_block or not scenario.lower_gates_ok
+    ):
+        return (
+            "ACCEPT_RISK_CANNOT_OVERRIDE_LOWER_GATE",
+            "human risk acceptance cannot override lower-gate BLOCK",
+        )
+    return None
+
+
+def consensus_decision(scenario: Scenario) -> Optional[Decision]:
+    if scenario.consensus_kind in {"plan", "code"} and scenario.consensus_status == "needed":
+        return Decision(
+            next_line=f"NEXT: In {role_label(scenario.owner_role)} chat, send: /bk work",
+            why=(
+                f"{scenario.consensus_kind} consensus required in "
+                f"{scenario.consensus_mode} mode before the next lane"
+            ),
+            unit=unit_for(scenario),
+            lock=lock_for(scenario),
+            safe_point=scenario.origin_work_head,
+            stop_if="only consensus topic docs may change before acceptance",
+        )
+    if (
+        scenario.review_status == "review_pending"
+        and scenario.consensus_status == "accepted"
+    ):
+        return Decision(
+            next_line=f"NEXT: In {role_label(scenario.owner_role)} chat, send: /bk work",
+            why="accepted code consensus unlocks runner finalization only",
+            unit=unit_for(scenario),
+            lock=lock_for(scenario),
+            safe_point=scenario.origin_work_head,
+            stop_if="finalize current row and stop; do not start another package",
+        )
+    if scenario.consensus_status == "fix_required":
+        return Decision(
+            next_line=f"NEXT: In {role_label(scenario.owner_role)} chat, send: /bk work",
+            why="consensus requested a runner-owned fix lane",
+            unit=unit_for(scenario),
+            lock=lock_for(scenario),
+            safe_point=scenario.origin_work_head,
+            stop_if="new checkpoint must create a new SubjectCommit and topic",
+        )
+    if scenario.human_decision == "request_code_fix":
+        return Decision(
+            next_line="NEXT: In Codex chat, send: /bk work",
+            why="human requested code fix; runner owns repair",
+            unit=unit_for(scenario),
+            lock=lock_for(scenario),
+            safe_point=scenario.origin_work_head,
+            stop_if="runner fix must produce new checkpoint and supersede old topic",
+        )
+    if scenario.human_decision == "request_plan_revision":
+        return Decision(
+            next_line="NEXT: In CC chat, send: /bk work",
+            why="human requested plan revision",
+            unit=unit_for(scenario),
+            lock=lock_for(scenario),
+            safe_point=scenario.origin_work_head,
+            stop_if="new plan revision must create a new SubjectCommit and topic",
+        )
+    return None
+
+
 def decide(scenario: Scenario) -> Decision:
     if scenario.state_conflict:
         return block(
@@ -160,6 +400,11 @@ def decide(scenario: Scenario) -> Decision:
             "STATE_CONFLICT",
             "BATON, progress, audit, or roadmap state disagree",
         )
+
+    consensus_failure = consensus_blocker(scenario)
+    if consensus_failure:
+        code, why = consensus_failure
+        return block(scenario, code, why)
 
     if scenario.audit_pending:
         return block(
@@ -277,6 +522,10 @@ def decide(scenario: Scenario) -> Decision:
             safe_point=scenario.origin_work_head,
             stop_if="do not run from the wrong role window",
         )
+
+    consensus_route = consensus_decision(scenario)
+    if consensus_route:
+        return consensus_route
 
     return Decision(
         next_line=f"NEXT: In {role_label(scenario.owner_role)} chat, send: /bk work",
@@ -451,6 +700,319 @@ def scenarios() -> Dict[str, Scenario]:
             base,
             name="state_conflict",
             state_conflict=True,
+        ),
+        "plan_consensus_ready_standard": replace(
+            base,
+            name="plan_consensus_ready_standard",
+            here_role="cc",
+            owner_role="cc",
+            lane="blue-k-consensus",
+            authorized_action="plan_consensus_requested",
+            consensus_kind="plan",
+            consensus_mode="standard",
+            consensus_status="needed",
+            topic_status="open",
+        ),
+        "plan_consensus_after_warn_full": replace(
+            base,
+            name="plan_consensus_after_warn_full",
+            here_role="cc",
+            owner_role="cc",
+            lane="blue-k-consensus",
+            authorized_action="plan_consensus_requested",
+            audit_verdict="WARN",
+            warn_accepted=True,
+            consensus_kind="plan",
+            consensus_mode="full",
+            consensus_status="needed",
+            topic_status="open",
+            full_mode_reason="accepted audit WARN",
+        ),
+        "code_consensus_light_auto_accept": replace(
+            base,
+            name="code_consensus_light_auto_accept",
+            lane="blue-k-consensus",
+            authorized_action="code_consensus_requested",
+            consensus_kind="code",
+            consensus_mode="light",
+            consensus_status="needed",
+            topic_status="open",
+            auto_accepted=True,
+            review_status="review_pending",
+            active_package="docs/mian-k/main/03_rules",
+            progress_row_id="main:03",
+        ),
+        "review_pending_finalize_only": replace(
+            base,
+            name="review_pending_finalize_only",
+            lane="blue-k-main-runner",
+            authorized_action="runner_finalize_requested",
+            consensus_kind="code",
+            consensus_mode="light",
+            consensus_status="accepted",
+            topic_status="accepted",
+            acceptance_subject_commit=GOOD_WORK_HEAD,
+            review_status="review_pending",
+            active_package="docs/mian-k/main/03_rules",
+            progress_status="review_pending",
+            progress_row_id="main:03",
+        ),
+        "fix_required_routes_runner_fix": replace(
+            base,
+            name="fix_required_routes_runner_fix",
+            lane="blue-k-main-runner",
+            authorized_action="runner_fix_requested",
+            consensus_kind="code",
+            consensus_mode="standard",
+            consensus_status="fix_required",
+            topic_status="accepted",
+            acceptance_subject_commit=GOOD_WORK_HEAD,
+            review_status="review_pending",
+            active_package="docs/mian-k/main/03_rules",
+            progress_status="review_pending",
+            progress_row_id="main:03",
+            finding_set_commit="4444444",
+        ),
+        "review_failed_human_blocked": replace(
+            base,
+            name="review_failed_human_blocked",
+            lane="blue-k-main-runner",
+            authorized_action="runner_review_recovery_requested",
+            consensus_kind="code",
+            consensus_mode="full",
+            consensus_status="human_blocked",
+            topic_status="open",
+            review_status="review_failed",
+            active_package="docs/mian-k/main/03_rules",
+            progress_status="review_failed",
+            progress_row_id="main:03",
+        ),
+        "superseded_topic_after_code_fix": replace(
+            base,
+            name="superseded_topic_after_code_fix",
+            lane="blue-k-main-runner",
+            authorized_action="runner_finalize_requested",
+            consensus_kind="code",
+            consensus_mode="light",
+            consensus_status="accepted",
+            topic_status="superseded",
+            subject_commit=NEW_SUBJECT_HEAD,
+            acceptance_subject_commit=GOOD_WORK_HEAD,
+            review_status="review_pending",
+            progress_status="review_pending",
+            progress_row_id="main:03",
+        ),
+        "old_acceptance_rejected_after_new_subject": replace(
+            base,
+            name="old_acceptance_rejected_after_new_subject",
+            lane="blue-k-main-runner",
+            authorized_action="runner_finalize_requested",
+            consensus_kind="code",
+            consensus_mode="light",
+            consensus_status="accepted",
+            topic_status="accepted",
+            subject_commit=NEW_SUBJECT_HEAD,
+            acceptance_subject_commit=GOOD_WORK_HEAD,
+            review_status="review_pending",
+            progress_status="review_pending",
+            progress_row_id="main:03",
+        ),
+        "accepted_consensus_missing_subject": replace(
+            base,
+            name="accepted_consensus_missing_subject",
+            lane="blue-k-main-runner",
+            authorized_action="runner_finalize_requested",
+            consensus_kind="code",
+            consensus_mode="light",
+            consensus_status="accepted",
+            topic_status="accepted",
+            review_status="review_pending",
+            progress_status="review_pending",
+            progress_row_id="main:03",
+        ),
+        "dependency_fix_target_active": replace(
+            base,
+            name="dependency_fix_target_active",
+            lane="blue-k-other-runner",
+            authorized_action="runner_fix_requested",
+            consensus_kind="code",
+            consensus_mode="standard",
+            consensus_status="fix_required",
+            topic_status="accepted",
+            acceptance_subject_commit=GOOD_WORK_HEAD,
+            active_package="docs/mian-k/other/07_sidequest",
+            dependency_recovery_target="docs/mian-k/main/02_prereq",
+            fix_target="active_package",
+            progress_status="review_pending",
+            progress_row_id="other:07",
+            finding_set_commit="5555555",
+        ),
+        "dependency_fix_target_prereq": replace(
+            base,
+            name="dependency_fix_target_prereq",
+            lane="blue-k-other-runner",
+            authorized_action="runner_fix_requested",
+            consensus_kind="code",
+            consensus_mode="standard",
+            consensus_status="fix_required",
+            topic_status="accepted",
+            acceptance_subject_commit=GOOD_WORK_HEAD,
+            active_package="docs/mian-k/other/07_sidequest",
+            dependency_recovery_target="docs/mian-k/main/02_prereq",
+            fix_target="dependency_recovery_target",
+            progress_status="review_pending",
+            progress_row_id="other:07",
+            finding_set_commit="6666666",
+        ),
+        "dependency_fix_target_both": replace(
+            base,
+            name="dependency_fix_target_both",
+            lane="blue-k-other-runner",
+            authorized_action="runner_fix_requested",
+            consensus_kind="code",
+            consensus_mode="full",
+            consensus_status="fix_required",
+            topic_status="accepted",
+            acceptance_subject_commit=GOOD_WORK_HEAD,
+            active_package="docs/mian-k/other/07_sidequest",
+            dependency_recovery_target="docs/mian-k/main/02_prereq",
+            fix_target="both",
+            progress_status="review_pending",
+            progress_row_id="other:07",
+            finding_set_commit="7777777",
+            full_mode_reason="dependency recovery touches active and prerequisite packages",
+        ),
+        "dependency_fix_missing_target": replace(
+            base,
+            name="dependency_fix_missing_target",
+            lane="blue-k-other-runner",
+            authorized_action="runner_fix_requested",
+            consensus_kind="code",
+            consensus_mode="standard",
+            consensus_status="fix_required",
+            topic_status="accepted",
+            acceptance_subject_commit=GOOD_WORK_HEAD,
+            active_package="docs/mian-k/other/07_sidequest",
+            dependency_recovery_target="docs/mian-k/main/02_prereq",
+            progress_status="review_pending",
+            progress_row_id="other:07",
+            finding_set_commit="8888888",
+        ),
+        "human_blocked_request_code_fix": replace(
+            base,
+            name="human_blocked_request_code_fix",
+            lane="blue-k-main-runner",
+            authorized_action="runner_fix_requested",
+            consensus_kind="code",
+            consensus_mode="full",
+            consensus_status="human_blocked",
+            topic_status="open",
+            human_decision="request_code_fix",
+            active_package="docs/mian-k/main/03_rules",
+            progress_status="review_pending",
+            progress_row_id="main:03",
+        ),
+        "human_blocked_request_plan_revision": replace(
+            base,
+            name="human_blocked_request_plan_revision",
+            here_role="cc",
+            owner_role="cc",
+            lane="blue-k-planner",
+            authorized_action="plan_revision_requested",
+            consensus_kind="plan",
+            consensus_mode="full",
+            consensus_status="human_blocked",
+            topic_status="open",
+            human_decision="request_plan_revision",
+        ),
+        "human_blocked_cancel_topic": replace(
+            base,
+            name="human_blocked_cancel_topic",
+            lane="blue-k-main-runner",
+            authorized_action="runner_finalize_requested",
+            consensus_kind="code",
+            consensus_mode="full",
+            consensus_status="human_blocked",
+            topic_status="cancelled",
+            human_decision="cancel_topic",
+            progress_status="review_pending",
+        ),
+        "waiver_not_auto_accept": replace(
+            base,
+            name="waiver_not_auto_accept",
+            lane="blue-k-consensus",
+            authorized_action="code_consensus_requested",
+            consensus_kind="code",
+            consensus_mode="light",
+            consensus_status="needed",
+            topic_status="open",
+            auto_accepted=True,
+            waiver_used=True,
+        ),
+        "docs_only_freeze_violation": replace(
+            base,
+            name="docs_only_freeze_violation",
+            lane="blue-k-main-runner",
+            authorized_action="runner_finalize_requested",
+            consensus_kind="code",
+            consensus_mode="light",
+            consensus_status="accepted",
+            topic_status="accepted",
+            acceptance_subject_commit=GOOD_WORK_HEAD,
+            docs_only_freeze_ok=False,
+            progress_status="review_pending",
+        ),
+        "acceptance_hash_mismatch": replace(
+            base,
+            name="acceptance_hash_mismatch",
+            lane="blue-k-main-runner",
+            authorized_action="runner_finalize_requested",
+            consensus_kind="code",
+            consensus_mode="light",
+            consensus_status="accepted",
+            topic_status="accepted",
+            acceptance_subject_commit=GOOD_WORK_HEAD,
+            acceptance_hash_ok=False,
+            progress_status="review_pending",
+        ),
+        "lower_gate_block_cannot_be_accepted": replace(
+            base,
+            name="lower_gate_block_cannot_be_accepted",
+            lane="blue-k-consensus",
+            authorized_action="code_consensus_requested",
+            consensus_kind="code",
+            consensus_mode="full",
+            consensus_status="needed",
+            topic_status="open",
+            lower_gate_block=True,
+            lower_gates_ok=False,
+            review_status="review_pending",
+        ),
+        "consensus_dirty_blocks_runner": replace(
+            base,
+            name="consensus_dirty_blocks_runner",
+            lane="blue-k-main-runner",
+            authorized_action="runner_finalize_requested",
+            consensus_kind="code",
+            consensus_mode="light",
+            consensus_status="accepted",
+            topic_status="accepted",
+            acceptance_subject_commit=GOOD_WORK_HEAD,
+            consensus_dirty=True,
+            progress_status="review_pending",
+        ),
+        "full_mode_graph_high_risk": replace(
+            base,
+            name="full_mode_graph_high_risk",
+            lane="blue-k-consensus",
+            authorized_action="code_consensus_requested",
+            consensus_kind="code",
+            consensus_mode="full",
+            consensus_status="needed",
+            topic_status="open",
+            full_mode_reason="code graph high-risk overlay edge changed",
+            active_package="docs/mian-k/main/05_graph",
+            progress_row_id="main:05",
         ),
     }
 
