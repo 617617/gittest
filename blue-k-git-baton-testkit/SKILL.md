@@ -13,8 +13,9 @@ control-plane decisions that decide whether another AI should run `bk sync` or
 
 ## Roles
 
-- `bk sync` is a shell-side read-only control command. It fetches/inspects
-  remote state and prints the next safe action.
+- `bk sync` is a shell-side control command. It fetches/inspects remote state,
+  safely fast-forwards a clean local branch when possible, and prints the next
+  safe action. It must not execute Blue-K tasks.
 - `/bk work` is an AI chat command. It may call Blue-K skills in the real
   project. In this testkit it is simulated by scenario decisions only.
 - CC normally owns planner/audit/review lanes.
@@ -27,15 +28,24 @@ control-plane decisions that decide whether another AI should run `bk sync` or
 3. Run the simulator:
 
 ```powershell
-python .\blue-k-git-baton-testkit\scripts\bk_sync_sim.py --list
-python .\blue-k-git-baton-testkit\scripts\bk_sync_sim.py --all
+.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -List
+.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -All
 ```
 
 4. For a single boundary case:
 
 ```powershell
-python .\blue-k-git-baton-testkit\scripts\bk_sync_sim.py --scenario ready_codex_main
+.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -Scenario ready_codex_main
 ```
+
+5. If the user runs shell-side work by mistake:
+
+```powershell
+.\blue-k-git-baton-testkit\scripts\bk.ps1 work
+```
+
+It must only tell the user to send `/bk work` in the AI chat window named by
+`bk sync`.
 
 ## What To Validate
 
@@ -98,4 +108,6 @@ The simulator intentionally covers edge cases:
 - `references/protocol-v0.5.md`: earlier baseline retained for comparison.
 - `references/scenario-matrix.md`: expected decision matrix.
 - `scripts/bk_sync_sim.py`: deterministic decision simulator.
+- `scripts/bk.ps1`: user-facing shell wrapper for `bk sync` / guarded
+  shell-side `bk work`.
 - `assets/sample-artifacts/`: sample BATON/progress/audit files for inspection.

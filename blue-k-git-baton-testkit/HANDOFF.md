@@ -11,7 +11,7 @@ D:\code\gittest
 Your task is to validate the v0.9 two-entry Blue-K Git baton workflow:
 
 ```text
-bk sync   - shell-side read-only status and decision sheet
+bk sync   - shell-side safe sync, status, and decision sheet
 /bk work  - AI chat command that executes the current assignment
 ```
 
@@ -29,22 +29,28 @@ backend. Use it to test protocol boundaries quickly.
 From `D:\code\gittest`:
 
 ```powershell
-python .\blue-k-git-baton-testkit\scripts\bk_sync_sim.py --list
-python .\blue-k-git-baton-testkit\scripts\bk_sync_sim.py --all
+.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -List
+.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -All
 ```
 
 Run a single case:
 
 ```powershell
-python .\blue-k-git-baton-testkit\scripts\bk_sync_sim.py --scenario ready_codex_main
-python .\blue-k-git-baton-testkit\scripts\bk_sync_sim.py --scenario stale_lease_takeover_required
-python .\blue-k-git-baton-testkit\scripts\bk_sync_sim.py --scenario code_consensus_light_auto_accept
-python .\blue-k-git-baton-testkit\scripts\bk_sync_sim.py --scenario fix_required_routes_runner_fix
+.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -Scenario ready_codex_main
+.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -Scenario stale_lease_takeover_required
+.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -Scenario code_consensus_light_auto_accept
+.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -Scenario fix_required_routes_runner_fix
 ```
+
+Do not ask the user to run `git pull` as part of the normal workflow. `bk sync`
+owns safe fetch/fast-forward behavior. Shell-side `bk work` is only a guard
+that tells the user to send `/bk work` in the named AI chat window.
 
 ## What To Check
 
 - Every scenario must produce one unambiguous first-line `NEXT`.
+- User-facing tests should enter through `scripts/bk.ps1 sync`, not raw
+  simulator or manual `git pull`.
 - Runner scenarios must not show wrapper-selected packages.
 - Planner scenarios must require durable `AuthorizedAction`.
 - Audit-pending must not become runner-ready.

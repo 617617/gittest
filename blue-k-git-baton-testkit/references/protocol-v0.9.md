@@ -7,13 +7,19 @@ This testkit validates the wrapper decisions around them.
 ## Two Entries
 
 ```text
-bk sync   - shell command; read-only remote inspection and decision sheet
+bk sync   - shell command; safe sync, remote inspection, and decision sheet
 /bk work  - AI chat command; executes exactly the assignment named by BATON
 ```
 
 Shell `bk sync` must not execute planner, audit, runner, review, or consensus
-skills. It prints the next safe command and the window where the human should
-run it.
+skills. It may fetch remote refs and fast-forward a clean local branch to the
+tracked upstream when that update is provably safe. It prints the next safe
+command and the window where the human should run it.
+
+Normal users should not run raw `git pull` during baton operation. `bk sync`
+owns safe fetch/fast-forward behavior. If local and remote diverge, or the
+worktree is dirty, `bk sync` stops instead of merging, rebasing, stashing, or
+cleaning.
 
 Shell `bk work` must not exist as a hidden executor. If a user tries it, print:
 
