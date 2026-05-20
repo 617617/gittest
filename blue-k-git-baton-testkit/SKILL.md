@@ -104,6 +104,8 @@ The simulator intentionally covers edge cases:
 ## Resources
 
 - `HANDOFF.md`: short handoff for the other AI.
+- `HANDOFF_REGISTER_CLAUDE_PROJECT_SKILLS.md`: handoff for Claude to register
+  the two exposed project entries in the real repository.
 - `references/protocol-v0.9.md`: current protocol specification under test.
 - `references/protocol-v0.5.md`: earlier baseline retained for comparison.
 - `references/scenario-matrix.md`: expected decision matrix.
