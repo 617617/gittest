@@ -93,6 +93,10 @@ The consensus lane is stored under:
 docs/mian-k/_consensus/<topic-id>/
 ```
 
+`docs/mian-k` is intentional in this testkit because the current Blue-K
+materials use that existing directory name. Do not normalize it to
+`docs/main-k` unless the upstream workflow is renamed.
+
 It must contain `NOT_A_PACKAGE.md` and must be excluded from package discovery.
 It must not contain package-shaped files such as `EXECUTE.md`.
 

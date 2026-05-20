@@ -47,7 +47,7 @@ python .\blue-k-git-baton-testkit\scripts\bk_sync_sim.py --all
 | `acceptance_hash_mismatch` | Canonical acceptance hash mismatch blocks next lane | `NEXT: Do not run /bk work` |
 | `lower_gate_block_cannot_be_accepted` | Consensus/human cannot override lower-gate BLOCK | `NEXT: Do not run /bk work` |
 | `consensus_dirty_blocks_runner` | Dirty consensus draft cannot authorize runner start | `NEXT: Do not run /bk work` |
-| `full_mode_graph_high_risk` | Graph/high-risk finding escalates to full consensus | `NEXT: In Codex chat, send: /bk work` |
+| `full_mode_graph_high_risk` | Graph high-risk overlay edge change triggers full code consensus | `NEXT: In Codex chat, send: /bk work` |
 
 ## Review Questions
 

@@ -89,6 +89,7 @@ The simulator intentionally covers edge cases:
 - Consensus topics become invalid when a new subject commit appears.
 - Between subject and acceptance commits, only the topic directory under
   `docs/mian-k/_consensus/<topic-id>/` may change.
+- `docs/mian-k` is the intentional current Blue-K path name in this testkit.
 
 ## Resources
 
