@@ -1,0 +1,30 @@
+SchemaVersion: "0.5"
+State: ready
+OwnerRole: codex
+OwnerMachineId: codex-box-a
+OwnerWorktreeId: gittest-codex
+OwnerSessionId: session-codex-001
+Lane: blue-k-main-runner
+AuthorizedAction: run_main_requested
+WorkBranch: blue-k/k1
+WorkBranchHead: "1111111"
+CoordinationBranch: blue-k/coordination
+CoordinationHead: "aaaaaaa"
+AssignmentId: assignment-main-next
+Lease:
+  Token:
+  Status: none
+  HolderRole:
+  HolderMachineId:
+  HolderSessionId:
+  AcquiredAt:
+  ExpiresAt:
+Progress:
+  File: docs/mian-k/MAIN_PACKAGE_PROGRESS.md
+  IndexHint:
+  StatusHint: pending
+Audit:
+  Manifest: docs/mian-k/AUDIT_MANIFEST.yaml
+  Report: docs/mian-k/BLUE_K_PLAN_AUDIT_REPORT.md
+LastPushedWorkCommit: "1111111"
+LastCoordinationCommit: "aaaaaaa"

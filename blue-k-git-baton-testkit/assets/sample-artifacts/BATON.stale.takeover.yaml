@@ -1,0 +1,34 @@
+SchemaVersion: "0.5"
+State: leased
+OwnerRole: codex
+OwnerMachineId: codex-box-old
+OwnerWorktreeId: gittest-codex-old
+OwnerSessionId: session-codex-lost
+Lane: blue-k-main-runner
+AuthorizedAction: run_main_requested
+WorkBranch: blue-k/k1
+WorkBranchHead: "1111111"
+CoordinationBranch: blue-k/coordination
+CoordinationHead: "bbbbbbb"
+AssignmentId: assignment-main-03
+Lease:
+  Token: stale-token-001
+  Status: stale
+  HolderRole: codex
+  HolderMachineId: codex-box-old
+  HolderSessionId: session-codex-lost
+  AcquiredAt: "2026-05-20T10:00:00+08:00"
+  ExpiresAt: "2026-05-20T11:00:00+08:00"
+Progress:
+  File: docs/mian-k/MAIN_PACKAGE_PROGRESS.md
+  IndexHint: "03"
+  StatusHint: running
+Audit:
+  Manifest: docs/mian-k/AUDIT_MANIFEST.yaml
+  Report: docs/mian-k/BLUE_K_PLAN_AUDIT_REPORT.md
+LastPushedWorkCommit: "1111111"
+LastCoordinationCommit: "bbbbbbb"
+TakeoverPolicy:
+  Automatic: false
+  RequiredCommand: "/bk work --takeover --from-last-pushed --abandon-unpushed-ok"
+  Warning: "Unpushed local work on the old holder may be abandoned."
