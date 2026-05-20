@@ -3,8 +3,12 @@
 Run:
 
 ```powershell
-python .\blue-k-git-baton-testkit\scripts\bk_sync_sim.py --all
+.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -Coverage
 ```
+
+Normal users should not run per-scenario commands. The table below documents
+the internal decision partitions covered by `bk sync -Coverage`. Raw
+`bk_sync_sim.py --scenario ...` is only a developer diagnostic path.
 
 ## Scenarios
 

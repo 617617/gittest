@@ -16,6 +16,9 @@ bk sync   - shell-side safe Git sync and decision sheet
 
 Do not ask the user to run raw `git pull` during normal baton operation.
 `bk sync` owns safe fetch/fast-forward behavior.
+Do not ask the user to run per-scenario commands during normal testing. Boundary
+coverage must be exposed as `bk sync -Coverage` or an equivalent single
+`bk sync` submode.
 
 ## Current Claude Registration Format
 
@@ -218,6 +221,7 @@ From the target project root, after registration:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\blue_k_baton\bk.ps1 sync
+powershell -ExecutionPolicy Bypass -File scripts\blue_k_baton\bk.ps1 sync -Coverage
 powershell -ExecutionPolicy Bypass -File scripts\blue_k_baton\bk.ps1 work
 ```
 
@@ -225,6 +229,8 @@ Expected:
 
 - `sync` fetches/safely fast-forwards or blocks with a clear `FailureCode`;
 - `sync` prints one first-line `NEXT:`;
+- `sync -Coverage` covers representative boundary partitions without asking
+  the user to run individual scenario ids;
 - shell-side `work` does not execute tasks and tells the user to use `/bk work`;
 - Claude Code lists/recognizes `/bk` and `/bk-sync` after skills are created or after restarting if needed;
 - `/bk work` refuses to proceed if sync/start gates are not satisfied.

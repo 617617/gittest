@@ -4,6 +4,7 @@ param(
     [string]$Command = "sync",
 
     [string]$Scenario = "ready_codex_main",
+    [switch]$Coverage,
     [switch]$All,
     [switch]$List,
     [switch]$NoFastForward
@@ -109,13 +110,26 @@ function Sync-GitState {
 }
 
 function Invoke-Simulator {
+    if ($Coverage) {
+        Write-Output "BK: coverage"
+        Write-Output "CoverageMode: sync decision partitions"
+        Write-Output "UserSurface: bk sync -> /bk work"
+        Write-Output "DeveloperNote: internal scenarios are grouped behind this single sync entry"
+        & python $Simulator --all
+        exit $LASTEXITCODE
+    }
     if ($List) {
+        Write-Output "DeveloperDiagnostic: listing internal scenario ids"
         & python $Simulator --list
         exit $LASTEXITCODE
     }
     if ($All) {
+        Write-Output "DeveloperDiagnostic: -All is deprecated; use bk sync -Coverage"
         & python $Simulator --all
         exit $LASTEXITCODE
+    }
+    if ($PSBoundParameters.ContainsKey("Scenario")) {
+        Write-Output "DeveloperDiagnostic: -Scenario is for internal debugging; user tests should use bk sync or bk sync -Coverage"
     }
     & python $Simulator --scenario $Scenario
     exit $LASTEXITCODE
@@ -133,11 +147,18 @@ switch ($Command) {
     }
     "help" {
         Write-Output "Usage:"
-        Write-Output "  bk sync [-Scenario <name>] [-All] [-List]"
+        Write-Output "  bk sync"
+        Write-Output "  bk sync -Coverage"
         Write-Output "  bk work"
         Write-Output ""
         Write-Output "sync fetches origin and safely fast-forwards a clean local branch before printing the decision sheet."
+        Write-Output "coverage runs boundary partitions behind the same sync entry without exposing per-scenario commands to users."
         Write-Output "work is only a shell-side guard; execute /bk work in the AI chat window."
+        Write-Output ""
+        Write-Output "Developer diagnostics:"
+        Write-Output "  bk sync -Scenario <name>"
+        Write-Output "  bk sync -List"
+        Write-Output "  bk sync -All   (deprecated alias for coverage diagnostics)"
         exit 0
     }
 }

@@ -25,17 +25,16 @@ control-plane decisions that decide whether another AI should run `bk sync` or
 
 1. Read `HANDOFF.md` first when acting as the other AI.
 2. Read `references/protocol-v0.9.md` before changing the protocol.
-3. Run the simulator:
+3. Run the normal user sync entry:
 
 ```powershell
-.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -List
-.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -All
+.\blue-k-git-baton-testkit\scripts\bk.ps1 sync
 ```
 
-4. For a single boundary case:
+4. To test boundary coverage without exposing internal cases to the user:
 
 ```powershell
-.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -Scenario ready_codex_main
+.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -Coverage
 ```
 
 5. If the user runs shell-side work by mistake:
@@ -49,7 +48,9 @@ It must only tell the user to send `/bk work` in the AI chat window named by
 
 ## What To Validate
 
-Check that each scenario produces one clear first-line action:
+Check that each user-facing entry produces one clear first-line action. The
+coverage mode may run many internal scenarios, but the user still enters
+through `bk sync -Coverage`.
 
 - `NEXT: In Codex chat, send: /bk work`
 - `NEXT: In CC chat, send: /bk work`

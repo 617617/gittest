@@ -29,28 +29,29 @@ backend. Use it to test protocol boundaries quickly.
 From `D:\code\gittest`:
 
 ```powershell
-.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -List
-.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -All
+.\blue-k-git-baton-testkit\scripts\bk.ps1 sync
 ```
 
-Run a single case:
+Run boundary coverage through the same user entry:
 
 ```powershell
-.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -Scenario ready_codex_main
-.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -Scenario stale_lease_takeover_required
-.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -Scenario code_consensus_light_auto_accept
-.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -Scenario fix_required_routes_runner_fix
+.\blue-k-git-baton-testkit\scripts\bk.ps1 sync -Coverage
 ```
 
 Do not ask the user to run `git pull` as part of the normal workflow. `bk sync`
 owns safe fetch/fast-forward behavior. Shell-side `bk work` is only a guard
 that tells the user to send `/bk work` in the named AI chat window.
 
+Do not ask the user to run per-scenario commands as the normal test path.
+`-Scenario`, `-List`, and raw `bk_sync_sim.py` are developer diagnostics only.
+
 ## What To Check
 
-- Every scenario must produce one unambiguous first-line `NEXT`.
 - User-facing tests should enter through `scripts/bk.ps1 sync`, not raw
-  simulator or manual `git pull`.
+  simulator, per-scenario commands, or manual `git pull`.
+- Normal sync must produce one unambiguous first-line `NEXT`.
+- Coverage mode must cover the internal scenario matrix while preserving the
+  two-entry user surface: `bk sync` then `/bk work`.
 - Runner scenarios must not show wrapper-selected packages.
 - Planner scenarios must require durable `AuthorizedAction`.
 - Audit-pending must not become runner-ready.
