@@ -1,6 +1,6 @@
 # skills/ — temporal-phase lane skills (registered)
 
-One skill directory per baton lane, **15 in total**, all registered in
+One skill directory per baton lane, **16 in total**, all registered in
 `.codex/skills.json` and validated by
 `scripts/verify_temporal_phase_skills.py`.
 
@@ -13,9 +13,9 @@ skills/
     agents/openai.yaml    # display_name / short_description / default_prompt
 ```
 
-## The 15 lanes (in baton order)
+## The 16 skills (10 Codex lanes, 1 Codex operational, 5 CC lanes)
 
-### Codex (10)
+### Codex (11 incl. operational)
 - `temporal-phase-blueprint` — DRAFTING_BLUEPRINT
 - `temporal-phase-pre-audit-codex` — PRE_AUDIT_R{1,2,3}
 - `temporal-phase-execute` — EXECUTING
@@ -26,6 +26,7 @@ skills/
 - `temporal-phase-second-audit-codex` — SECOND_AUDIT_CODEX
 - `temporal-phase-second-audit-fix` — SECOND_AUDIT_FIX
 - `temporal-phase-close` — PHASE_CLOSING
+- `temporal-phase-codex-sync` — (operational, not a baton lane)
 
 ### CC (5)
 - `temporal-phase-pre-audit-cc` — PRE_AUDIT_R{1,2,3}
@@ -37,10 +38,11 @@ skills/
 ## Invocation convention
 
 - **Codex side.** Codex CLI reads `.codex/skills.json` and registers the
-  10 lanes marked `codexLane: true`; each can be triggered directly via
-  `/<lane-name>`. The 5 CC-only lanes are present so Codex knows they
-  exist, but their `agents/openai.yaml` declares "Codex must refuse";
-  if asked to take one of them, Codex must decline.
+  11 entries marked `codexLane: true` (10 lane skills + 1 operational
+  sync skill); each can be triggered directly via `/<lane-name>`. The
+  5 CC-only lanes are present so Codex knows they exist, but their
+  `agents/openai.yaml` declares "Codex must refuse"; if asked to take
+  one of them, Codex must decline.
 - **CC side.** CC looks up the current baton state in `ROLES.md` Step
   Matrix to find the corresponding lane name, then `Read`s
   `SKILL.md` to follow the lane's procedure.

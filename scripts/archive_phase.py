@@ -41,7 +41,12 @@ ARCHIVE_ROOT = COORD_ROOT / "archive"
 
 PHASE_ID_RE = re.compile(r"^phase-\d+$")
 BATON_NEXT_RE = re.compile(r"^BatonNext:\s+([A-Z_0-9]+)\s*$")
-TERMINAL_STATES = {"COMPLETED", "BLOCKED_POSTEXEC", "BLOCKED_BLUEPRINT"}
+# Only the `temporal-phase-close` lane writes a `<phase-id>__close.md`,
+# and per `temporal-phase-close/SKILL.md` it emits only `COMPLETED` or
+# `BLOCKED_POSTEXEC` as its terminal `BatonNext` values. `BLOCKED_BLUEPRINT`
+# is reached via the `blueprint-revise` lane, which does NOT produce a
+# close.md, so it can never appear here -- listing it would be misleading.
+TERMINAL_STATES = {"COMPLETED", "BLOCKED_POSTEXEC"}
 
 
 def fail(msg: str) -> None:

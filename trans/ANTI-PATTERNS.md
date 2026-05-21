@@ -227,7 +227,7 @@ would just work from `D:\code\gittest`.
 
 **Why it broke.** `.codex/skills.json` has `allowGlobalFallback: false`.
 The Generator lives in `D:\code\temporal\.codex\skills\` (the work
-repo). A Codex CLI booted in the coord repo only sees the 27
+repo). A Codex CLI booted in the coord repo only sees the 28
 project-scoped skills there; it does **not** see the work-repo
 skills.
 

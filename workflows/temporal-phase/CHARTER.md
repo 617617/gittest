@@ -96,6 +96,9 @@ on `workflows/_active.md` `ChainMode:`:
 | `confirm`   | Report the close + the proposed next plan; ask the user (yes / edit / no); on yes, run the same actions. |
 | `off`       | Report the close; do nothing more. User must invoke `/temporal-phase-start` explicitly. |
 
+If the `ChainMode:` line is absent entirely from `workflows/_active.md`,
+CC treats it as `confirm` (the default).
+
 `confirm` is the default and the recommended setting until a chain is
 well-rehearsed. `auto` enables true hands-off Phase chaining when the
 roadmap is stable; flip to `off` at any time to pause.

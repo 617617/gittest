@@ -5,9 +5,10 @@ for converting a project's collaborative workflow document into a
 git-baton-driven dual-AI workflow under `workflows/<preset>/`.
 
 It was distilled from one full conversion: the Temporal project's Phase
-collaborative workflow → `workflows/temporal-phase/` (see commits
-`c158d6e` through `e091fbd`). Future conversions (e.g., a `blue-project`
-preset) should start here.
+collaborative workflow → the temporal-phase preset under
+`workflows/temporal-phase/` (its git history is auditable via
+`git log workflows/temporal-phase/`). Future conversions (e.g., a
+`blue-project` preset) should start here.
 
 ## Scope
 
@@ -49,7 +50,6 @@ trans/
     lane-SKILL.template.md
     lane-agents-openai.template.yaml
     verify-preset-skills.template.py
-    check-baton-artifacts.template.py
     watch-skill.template.md
     start-skill.template.md
 ```

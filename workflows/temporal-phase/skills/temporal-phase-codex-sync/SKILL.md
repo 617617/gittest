@@ -71,10 +71,17 @@ ls workflows/temporal-phase/_coord/from-codex/
 (Skip `_coord/archive/<phase-id>/` directories — those are closed
 Phases.)
 
-Identify the **most recent artifact across both mailboxes** by reading
-the last line each adds (Codex products are timestamped via commit
-order; on disk you can use modification time, or sort by phase-id and
-step-tag round suffix when present).
+Identify the **most recent artifact across both mailboxes**. Rules:
+
+- If only one non-`.gitkeep` artifact exists across both mailboxes,
+  that is the most recent (no tiebreak needed).
+- If multiple artifacts exist, sort by `phase-id` (highest wins;
+  there should normally be only one open phase-id), then by step-tag
+  using the baton transition order in `BATON.schema.md` — later
+  states sort later. Round-numbered tags (`pre-audit-codex-r2`)
+  sort after lower-round (`pre-audit-codex-r1`).
+- If still ambiguous, fall back to git commit order:
+  `git log --format='%H %s' workflows/temporal-phase/_coord/`.
 
 Read its first line `BatonNext: <STATE>`. That is the current baton
 state.
@@ -116,6 +123,34 @@ temporal-phase-codex-sync status:
 ## Authority
 Codex-only. CC does not invoke this skill; CC has its own
 `/temporal-phase-watch` and `/temporal-phase-start` skills.
+
+## Fallback modes (when something on Host B is restricted)
+
+The protocol assumes Codex CLI can (a) load this skill from
+`.codex/skills.json`, (b) run `python` subprocesses, and (c) `git
+push` without per-action confirmation. None of these are guaranteed
+universally. If any fails, the chain must not silently corrupt —
+fall back as follows:
+
+- **Slash command `/temporal-phase-codex-sync` not recognised** —
+  Codex CLI may not auto-register every entry from
+  `.codex/skills.json` as a slash command. Fallback: open this file
+  (`workflows/temporal-phase/skills/temporal-phase-codex-sync/SKILL.md`)
+  by path and follow steps 1–5 manually. Same effect.
+- **`python` subprocess blocked** — your CLI may refuse to spawn
+  python. Surface the verifier output to the user: "subprocess
+  blocked; please run `python scripts/verify_temporal_phase_skills.py`
+  and `python scripts/check_baton_artifacts.py` manually and paste
+  the output back". Do NOT proceed with `git push` until the user
+  confirms both PASS.
+- **`git push` requires per-action confirmation** — if your CLI
+  prompts for confirmation on every push, surface that to the user
+  rather than guessing. State the exact `git push` command being
+  proposed, wait for user approval, then proceed.
+- **Cannot read `.codex/skills.json` to enumerate skills** — surface
+  this to the user as "skill registry not visible from this session;
+  please run /temporal-phase-codex-sync after restarting Codex in
+  the coord-repo working directory".
 
 ## See also
 `workflows/temporal-phase/HANDOFF.md` (Codex entry), `workflows/temporal-phase/BATON.schema.md`,

@@ -1,5 +1,10 @@
 # PATTERNS — Reusable design patterns for git-baton presets
 
+**Note on order:** patterns are listed roughly in the order they were
+distilled, not strictly by number. Numbers (P1, P2, ...) are stable
+identifiers; readers should grep by topic or skim the full set rather
+than expecting monotonic order.
+
 Each pattern is independent: pick the ones that apply, skip the rest.
 Each section follows the same shape: **Pattern**, **Problem it solves**,
 **Shape**, **Reference**.
@@ -308,6 +313,48 @@ under ~600 words with file:line citations. CC then synthesizes.
 
 **Reference.** This session's audit messages (search the transcript
 for "Agent A", "Agent B", "Agent C", "Agent D").
+
+---
+
+## P22 — Cross-repo push order (work before coord)
+
+**Problem.** In a path-X workflow (coord repo separate from work repo)
+each lane that touches code writes commits in both repos. If the
+coord-side pointer (`<sha>` reference) is pushed before the work-repo
+commit it cites, the workflow has a dangling reference: the other
+side can read the pointer but cannot resolve `<sha>` in its local
+work-repo clone. The auditing lane breaks; recovery requires manual
+intervention.
+
+**Shape.** Every lane SKILL that writes commits in two repos
+documents an explicit push order:
+
+1. **First**, push the work repo. Confirm exit 0.
+2. **Only then**, push the coord repo.
+
+This way the worst-case partial state is "work repo pushed, coord not
+pushed" — recoverable by simply retrying the coord push. The pointer
+is still consistent with what is reachable in the work repo.
+
+Lane SKILLs also document the failure signature on the consumer
+side: the audit lane that cannot resolve a `<sha>` should fail with a
+clear `CROSS_REPO_MISSING_REF` error (or equivalent) so the cause is
+obvious.
+
+**Optional backup verifier.** A standalone script
+`scripts/verify_cross_repo_refs.py` walks both mailboxes and the
+archive subtree, extracts every `<project>@<sha>` reference, and
+attempts `git rev-parse --verify` against the local work-repo clone.
+It is **not** part of the default verifier flow (no work-repo access
+guarantee on all hosts); run it manually when you suspect a
+cross-repo drift.
+
+**Reference.**
+- `workflows/temporal-phase/skills/temporal-phase-blueprint/SKILL.md`
+  §"Push order".
+- `workflows/temporal-phase/skills/temporal-phase-execute/SKILL.md`
+  §"Push order".
+- `scripts/verify_cross_repo_refs.py`.
 
 ---
 

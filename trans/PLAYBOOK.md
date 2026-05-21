@@ -166,8 +166,9 @@ Two scripts and one config:
   format regex; step-tag is in the right mailbox; first line
   `BatonNext: <STATE>` and STATE is enumerated; at most one open Phase.
 
-Templates: `templates/verify-preset-skills.template.py`,
-`templates/check-baton-artifacts.template.py`.
+Templates: `templates/verify-preset-skills.template.py`.
+Reference implementation: `scripts/check_baton_artifacts.py` in this
+repo (copy + adapt for a new preset).
 
 **Gate.** Both scripts run with exit 0 against the new preset. Existing
 preset verifiers (e.g., testkit's) still pass.

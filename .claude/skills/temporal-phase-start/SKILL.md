@@ -119,17 +119,45 @@ When the user supplies `<phase-id>`, `<goal>`, and (optionally)
      and product filenames.
    ````
 
-4. Stage, commit, and push:
+4. **Check before committing.** Run `python scripts/check_baton_artifacts.py`
+   against the working tree. The new kickoff is present locally;
+   the checker confirms filename, BatonNext, mailbox routing, and
+   single-open-Phase. **If it FAILs**: delete the local file
+   (`rm workflows/temporal-phase/_coord/from-cc/<phase-id>__kickoff.md`),
+   surface the error, and stop. Nothing has been committed or pushed.
 
+5. **Collision check vs archive.** Even though check_baton_artifacts.py
+   ensures no other Phase is open in live mailboxes, it does NOT scan
+   `_coord/archive/`. Confirm `<phase-id>` is unused across the full
+   history:
+
+   ```bash
+   ALL_IDS=$( {
+     ls workflows/temporal-phase/_coord/from-cc/ workflows/temporal-phase/_coord/from-codex/ 2>/dev/null \
+       | grep -oE '^phase-[0-9]+';
+     ls workflows/temporal-phase/_coord/archive/ 2>/dev/null \
+       | grep -oE '^phase-[0-9]+';
+   } | sort -u )
+   echo "$ALL_IDS" | grep -qx "<phase-id>" && echo "CHAIN_COLLISION: <phase-id> already in use" && exit 1
+   ```
+   On collision: delete the local file, report `CHAIN_COLLISION`,
+   ask the user to pick a different phase-id, and stop.
+
+6. Stage and commit:
    ```bash
    git add workflows/temporal-phase/_coord/from-cc/<phase-id>__kickoff.md
    git commit -m "kickoff(<phase-id>): start Phase per temporal-phase workflow"
-   git push origin master
    ```
 
-5. Run `python scripts/check_baton_artifacts.py` to confirm the kickoff
-   is well-formed (filename, BatonNext, mailbox routing, single open
-   Phase). If it FAILs, undo the commit and surface the error.
+7. **Pull --rebase, then push.** Absorb any concurrent pushes before
+   sending yours:
+   ```bash
+   git pull --rebase origin master
+   git push origin master
+   ```
+   If the rebase has conflicts, surface them and stop — do not resolve
+   silently. If the push is rejected by some other rule (hook, branch
+   protection), surface and stop.
 
 **Step A3 — tell the user what happens next.**
 
@@ -139,10 +167,10 @@ Kickoff pushed.
   Commit:  <short SHA>
   State:   DRAFTING_BLUEPRINT (Codex's turn)
 
-Codex on Host B will detect the kickoff via its watcher and enter the
-temporal-phase-blueprint lane. No further action needed from you
-until Codex pushes the blueprint pointer to from-codex/. You will be
-notified when that arrives.
+The kickoff is now on origin/master. Codex on Host B does NOT have a
+live watcher -- the next time the user opens Codex (or runs
+/temporal-phase-codex-sync), Codex will pick up the kickoff and enter
+the temporal-phase-blueprint lane.
 ```
 
 **First-time Codex bootstrap (only if Codex has never been told about
@@ -206,22 +234,42 @@ CompletionCriteria summary).
 Then read `workflows/_active.md` to find the `ChainMode:` line (default
 to `confirm` if absent or malformed).
 
+**Helper — phase-id collision check (used multiple times below):**
+
+```bash
+ALL_IDS=$( {
+  ls workflows/temporal-phase/_coord/from-cc/ workflows/temporal-phase/_coord/from-codex/ 2>/dev/null \
+    | grep -oE '^phase-[0-9]+';
+  ls workflows/temporal-phase/_coord/archive/ 2>/dev/null \
+    | grep -oE '^phase-[0-9]+';
+} | sort -u )
+echo "$ALL_IDS" | grep -qx "<candidate-id>"   # exit 0 = collision
+```
+
+Note: live mailboxes still contain the closing Phase's artifacts at
+this point — that is expected, and the closing phase-id will appear in
+`ALL_IDS`. Exclude `<closed-id>` from collision matching when
+validating `<NextPhaseId>`.
+
 **Decision tree — apply in order, stopping at the first match:**
 
 1. **Hard stop conditions** (regardless of `ChainMode`):
    - `BatonNext:` is `BLOCKED_*` → tell the user the chain stops here,
      surface `NextPhasePlan.StopReason:` if present, suggest manual
-     triage. Skip to step 5 (archive).
+     triage. Skip to step 5 (archive prompt).
    - `NextPhasePlan:` block is missing or has no `NextPhaseId:` → tell
      the user the chain ended naturally (cite `StopReason:` if
      given). Skip to step 5.
-   - `NextPhaseId:` collides with any live mailbox phase-id or any
-     archived phase-id → report a `CHAIN_COLLISION` error with the
-     conflicting ids. **Do not** auto-advance. Skip to step 5.
+   - `NextPhaseId:` matches `^phase-\d+$` fails → report
+     `CHAIN_INVALID_ID`. Skip to step 5.
+   - **Run the helper above** with `<NextPhaseId>` (excluding
+     `<closed-id>`). If it returns collision → report
+     `CHAIN_COLLISION: <NextPhaseId> already exists as
+     <live|archived>`. **Do not** auto-advance. Skip to step 5.
 
 2. **`ChainMode = off`** → report the close and the proposed
    `NextPhasePlan` for the user's information. Take no further action.
-   Skip to step 5 only if the user explicitly asks to archive.
+   Ask about archiving (step 5) only if the user explicitly asks.
 
 3. **`ChainMode = confirm`** (default) → present the proposed plan and
    ask:
@@ -232,39 +280,62 @@ to `confirm` if absent or malformed).
 
    - `yes` → proceed with auto-advance (step 4).
    - `edit` → re-prompt the user for phase-id / goal / source-anchor
-     (same prompts as Branch A step A1), then proceed with
-     auto-advance using the edited values.
+     (same prompts as Branch A step A1). **After collecting the
+     edits, re-run the collision check on the user's new
+     `<NextPhaseId>`.** If collision → report and re-prompt or stop.
+     Only after the edited phase-id passes the collision check,
+     proceed with auto-advance.
    - `no` → take no further action; ask about archiving (step 5).
 
 4. **Auto-advance** (`ChainMode = auto`, or `confirm` with user `yes`,
-   or `confirm` with `edit` after re-prompt):
-   1. Run `python scripts/archive_phase.py <closed-id>`; surface any
-      FAIL.
-   2. Stage + commit + push the archive:
+   or `confirm` with `edit` after re-prompt + re-validation). All
+   archive + kickoff changes are wrapped in **one atomic commit** so
+   that origin/master never sees a half-state.
+
+   1. **Move locally.** Run `python scripts/archive_phase.py <closed-id>`.
+      This moves files from `from-cc/`+`from-codex/` to
+      `_coord/archive/<closed-id>/`. It does NOT commit. Surface any
+      FAIL and stop.
+   2. **Write next kickoff locally.** Create
+      `workflows/temporal-phase/_coord/from-cc/<NextPhaseId>__kickoff.md`
+      following the same body shape as Branch A step A2, populating
+      from `NextPhasePlan` (or the user-edited values) plus
+      `PreviousPhaseClose: gittest:workflows/temporal-phase/_coord/archive/<closed-id>/from-codex/<closed-id>__close.md`.
+      Do NOT commit yet.
+   3. **Check the combined working tree.** Run
+      `python scripts/check_baton_artifacts.py`. It must see exactly
+      the new kickoff in live mailboxes (archive is ignored). **If it
+      FAILs**: undo locally with
+      ```bash
+      git reset --hard HEAD
+      rm -f workflows/temporal-phase/_coord/from-cc/<NextPhaseId>__kickoff.md
+      ```
+      (the `git reset --hard` restores the tracked files that
+      archive_phase.py moved; the `rm` removes the still-untracked new
+      kickoff.) Surface the error and stop.
+   4. **Pull --rebase.** Absorb any concurrent pushes that landed
+      during the work above:
+      ```bash
+      git pull --rebase origin master
+      ```
+      If conflicts, surface and stop.
+   5. **One atomic commit.** Stage archive + kickoff together:
       ```bash
       git add -A workflows/temporal-phase/_coord/
-      git commit -m "archive: <closed-id> (<terminal-state>)"
-      git push origin master
+      git commit -m "chain: archive <closed-id> + kickoff <NextPhaseId>"
       ```
-   3. Re-run `python scripts/check_baton_artifacts.py` to confirm
-      clean mailboxes.
-   4. Write the next kickoff `from-cc/<NextPhaseId>__kickoff.md`
-      following the same format as Branch A step A2, populating from
-      `NextPhasePlan` (or the user-edited values) and adding
-      `PreviousPhaseClose: gittest:workflows/temporal-phase/_coord/archive/<closed-id>/from-codex/<closed-id>__close.md`.
-   5. Stage + commit + push the kickoff:
+   6. **Push.**
       ```bash
-      git add workflows/temporal-phase/_coord/from-cc/<NextPhaseId>__kickoff.md
-      git commit -m "kickoff(<NextPhaseId>): chained from <closed-id>"
       git push origin master
       ```
-   6. Run `check_baton_artifacts.py` once more to confirm the new
-      open Phase is well-formed.
-   7. Report:
+      If the push is rejected, surface and stop — the local commit is
+      still safe; the user can investigate. Do NOT auto-retry.
+   7. **Report.**
       ```text
-      Chain advanced: <closed-id> archived, <NextPhaseId> kicked off.
+      Chain advanced (atomic): <closed-id> archived, <NextPhaseId> kicked off.
         ChainMode:        <auto | confirm-confirmed | confirm-edited>
-        NewState:         DRAFTING_BLUEPRINT (Codex's turn)
+        Commit:           <short SHA>
+        NewState:         DRAFTING_BLUEPRINT (Codex's turn -- next /temporal-phase-codex-sync picks it up)
       ```
 
 5. **Archive prompt for non-auto paths** (`off`, `no`, or hard-stop):
@@ -273,8 +344,16 @@ to `confirm` if absent or malformed).
    > Phase `<closed-id>` is closed and the chain is paused. Archive
    > its artifacts to `_coord/archive/<closed-id>/`? [yes / no]
 
-   On `yes`: run archive_phase.py + commit + push (same steps as 4.1
-   through 4.3), then stop.
+   On `yes`: run `archive_phase.py`, then check before commit, then
+   pull --rebase, then commit + push:
+   ```bash
+   python scripts/archive_phase.py <closed-id>
+   python scripts/check_baton_artifacts.py   # FAIL -> git reset --hard HEAD; stop
+   git pull --rebase origin master
+   git add -A workflows/temporal-phase/_coord/
+   git commit -m "archive: <closed-id> (<terminal-state>)"
+   git push origin master
+   ```
 
 In all branches, end with a clear summary of what happened and what
 the user can do next (resume the chain by editing `ChainMode`, or

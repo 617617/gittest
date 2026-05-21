@@ -28,10 +28,11 @@ documents use prefix references (`gittest:...` / `temporal:...` /
 
 1. `PATHS.md` (host path table + prefix convention)
 2. `CHARTER.md` (goals / completion criteria / isolation from testkit)
-3. `ROLES.md` (16-step responsibility matrix + product names + mailboxes)
+3. `ROLES.md` (17-step responsibility matrix incl. Step 0 kickoff +
+   product names + mailboxes)
 4. `BATON.schema.md` (25 states + legal transitions + 5 invariants)
 5. The lane skill matching the current baton state:
-   `skills/temporal-phase-<lane>/SKILL.md` — do not read all 15; look up
+   `skills/temporal-phase-<lane>/SKILL.md` — do not read all 16; look up
    by state (see §3.1).
 
 The authoritative source document:
@@ -182,9 +183,22 @@ ActualChanges:
 Your Phase start signal is **always a kickoff file**, never a chat
 instruction.
 
-When CC writes `workflows/temporal-phase/_coord/from-cc/<phase-id>__kickoff.md`
-and pushes it, your watcher fires and you enter `DRAFTING_BLUEPRINT`.
-The kickoff carries:
+**There is no live Codex watcher.** The kickoff sits in git; you
+discover it the next time you run `/temporal-phase-codex-sync` (per
+§2.2). Sync is the only mechanism. If a kickoff was pushed while your
+session was offline, running sync on your next boot picks it up.
+
+When CC writes
+`workflows/temporal-phase/_coord/from-cc/<phase-id>__kickoff.md` and
+pushes it, the kickoff carries (verbatim):
+
+```text
+BatonNext: DRAFTING_BLUEPRINT
+```
+as its first non-empty line. That declares the baton state you should
+be in.
+
+The kickoff body fields:
 
 - `PhaseId:` — the phase id matching `phase-\d+` (this is your phase
   id; do not invent your own).
@@ -194,7 +208,8 @@ The kickoff carries:
 - `PreviousPhaseClose:` — optional pointer to the previous Phase's
   close.md (use it as predecessor context).
 
-Procedure:
+Procedure (after `/temporal-phase-codex-sync` tells you a kickoff is
+pending):
 
 1. Read the kickoff completely.
 2. Resolve `SourceAnchor` (if any) and read that section of the source
@@ -208,9 +223,11 @@ Procedure:
 5. Write the coord-side pointer file
    `from-codex/<phase-id>__blueprint.md` with first line
    `BatonNext: PRE_AUDIT_R1`.
-6. Commit to the coord repo and push to `origin/master`.
+6. Follow the lane SKILL's "Push order" section — push work repo
+   FIRST, then push coord repo.
 
-CC's side will pick up your blueprint on the next monitor tick.
+CC's monitor fires on the new file in `_coord/from-codex/` and the
+audit lane starts.
 
 **Do not** start a Phase without seeing the kickoff. If the user asks
 in chat to "start a Phase" without a kickoff in `from-cc/`, redirect
