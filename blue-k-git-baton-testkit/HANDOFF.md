@@ -8,21 +8,30 @@ Local test root:
 D:\code\gittest
 ```
 
-Your task is to validate the v0.9 two-entry Blue-K Git baton workflow:
+Your task is to validate the v0.10 forget-safe Blue-K Git baton workflow:
 
 ```text
-bk sync   - shell-side safe sync, status, and decision sheet
+bk sync   - shell-side safe sync, status, clipboard, and decision sheet
 /bk work  - AI chat command that executes the current assignment
 ```
 
 This folder is a self-contained testkit. It does not require the real DND
 backend. Use it to test protocol boundaries quickly.
 
+Humans should not memorize resume/takeover flags. They run `bk sync`, then
+paste the printed `ChatCommand` into the printed target chat. Valid chat
+commands are `/bk work`, `/bk resume`, and `/bk takeover`; takeover still
+requires explicit in-chat confirmation before any destructive recovery.
+
 ## Read First
 
 1. `blue-k-git-baton-testkit/SKILL.md`
-2. `blue-k-git-baton-testkit/references/protocol-v0.9.md`
+2. `blue-k-git-baton-testkit/references/protocol-v0.10.md`
 3. `blue-k-git-baton-testkit/references/scenario-matrix.md`
+
+Optional future context: `blue-k-git-baton-testkit/references/autonomy-proposal.md`
+is v0.11-oriented. Do not enable autonomous loops while validating v0.10
+forget-safe behavior.
 
 ## Fast Test Commands
 
@@ -50,6 +59,9 @@ Do not ask the user to run per-scenario commands as the normal test path.
 - User-facing tests should enter through `scripts/bk.ps1 sync`, not raw
   simulator, per-scenario commands, or manual `git pull`.
 - Normal sync must produce one unambiguous first-line `NEXT`.
+- Runnable sync decisions must also print `Task`, `Holder`, `Last`,
+  `ChatTarget`, and `ChatCommand`, and should copy `ChatCommand` to the
+  clipboard when the shell supports it.
 - Coverage mode must cover the internal scenario matrix while preserving the
   two-entry user surface: `bk sync` then `/bk work`.
 - Runner scenarios must not show wrapper-selected packages.
@@ -57,6 +69,8 @@ Do not ask the user to run per-scenario commands as the normal test path.
 - Audit-pending must not become runner-ready.
 - Stale lease must not auto-takeover.
 - Cross-side takeover must require explicit abandoned-unpushed-work acceptance.
+- Wrong-window `/bk work`, `/bk resume`, or `/bk takeover` must refuse and
+  print the correct target window/command.
 - Ordinary `/bk work` must block unless:
   `local HEAD == origin/work branch == BATON.WorkBranchHead`.
 - Unattended mode must block when atomic push is unavailable.

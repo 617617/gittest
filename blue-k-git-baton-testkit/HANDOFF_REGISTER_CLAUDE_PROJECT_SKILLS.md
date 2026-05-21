@@ -10,12 +10,14 @@ Goal: register the Blue-K Git baton workflow so the human only sees the two
 intended entries:
 
 ```text
-bk sync   - shell-side safe Git sync and decision sheet
+bk sync   - shell-side safe Git sync, clipboard, and decision sheet
 /bk work  - Claude chat-side execution entry
 ```
 
 Do not ask the user to run raw `git pull` during normal baton operation.
 `bk sync` owns safe fetch/fast-forward behavior.
+Do not ask the user to memorize resume/takeover flags. `bk sync` must print
+and, when possible, copy the exact `ChatCommand` to paste into the target chat.
 Do not ask the user to run per-scenario commands during normal testing. Boundary
 coverage must be exposed as `bk sync -Coverage` or an equivalent single
 `bk sync` submode.
@@ -35,12 +37,14 @@ skill behavior.
 Use these registrations:
 
 ```text
-.claude/skills/bk/SKILL.md        -> supports /bk work
+.claude/skills/bk/SKILL.md        -> supports /bk work, /bk resume, /bk takeover
 .claude/skills/bk-sync/SKILL.md   -> optional Claude-side mirror of shell sync
 scripts/blue_k_baton/bk.ps1       -> shell-side bk sync wrapper
 ```
 
-The required user path is `bk sync` in shell plus `/bk work` in Claude chat.
+The required user path is `bk sync` in shell plus the printed chat command in
+Claude chat. In normal starts that command is `/bk work`; resume and takeover
+may be printed as `/bk resume` or `/bk takeover`.
 `/bk-sync` is only an optional Claude-side audit convenience.
 
 ## Read First
@@ -50,7 +54,7 @@ From the testkit, read:
 ```text
 SKILL.md
 HANDOFF.md
-references/protocol-v0.9.md
+references/protocol-v0.10.md
 references/scenario-matrix.md
 scripts/bk.ps1
 ```
@@ -89,7 +93,9 @@ The wrapper must still keep these rules:
 - fast-forward only when local branch is clean and local HEAD is ancestor of upstream;
 - stop on dirty worktree, local-ahead, diverged branches, missing upstream, or fetch failure;
 - never merge, rebase, stash, clean, force-push, or execute Blue-K skills;
-- print one first-line `NEXT:`.
+- print one first-line `NEXT:`;
+- print `Task`, `Holder`, `Last`, `ChatTarget`, and `ChatCommand`;
+- copy `ChatCommand` to the clipboard when possible, and fail soft otherwise.
 
 3. Add a project shell alias instruction. Prefer documenting this in the
 operator setup notes instead of changing global shell profile automatically:
@@ -109,7 +115,7 @@ New-Item -ItemType Directory -Force .claude\skills\bk-sync
 
 ```markdown
 ---
-description: Blue-K Git baton chat entry. Use when the user types /bk work or asks Claude to execute the current BATON assignment after bk sync has selected this Claude window.
+description: Blue-K Git baton chat entry. Use when the user types /bk work, /bk resume, or /bk takeover after bk sync has selected this Claude window.
 disable-model-invocation: true
 allowed-tools:
   - Bash(git *)
@@ -123,12 +129,19 @@ allowed-tools:
 
 # Blue-K Baton Work
 
-This skill handles `/bk work`.
+This skill handles `/bk work`, `/bk resume`, and `/bk takeover`.
 
-If the user did not pass `work` as the first argument, stop and say:
+On the first response in each chat, self-announce:
 
 ```text
-Use /bk work for execution. Use shell bk sync for synchronization.
+I am Claude. Lane: <current BATON lane or lanes this window owns>.
+```
+
+If the user did not pass `work`, `resume`, or `takeover` as the first argument,
+stop and say:
+
+```text
+Use shell bk sync first, then paste its ChatCommand here.
 ```
 
 ## Non-Negotiable Rules
@@ -137,12 +150,18 @@ Use /bk work for execution. Use shell bk sync for synchronization.
 - Do not start unless local HEAD, origin work branch, and BATON.WorkBranchHead match.
 - Do not start unless the worktree is clean.
 - Do not execute from the wrong owner role/window.
+- If the current chat/window does not match BATON.OwnerRole and Lane, refuse
+  and print the correct target window plus exact command.
 - Acquire the coordination lease through compare-and-swap before changing business state.
 - Run exactly one BATON assignment, then push a safe point and hand off.
 - Do not select runner packages in this wrapper.
 - Do not write progress tables in this wrapper.
 - Do not run stage-loop-auto in this wrapper.
 - Do not override plan-audit, traceable-review, code-graph, or package-gate BLOCK.
+- `/bk resume` is same-holder recovery only.
+- `/bk takeover` resumes only from the last pushed checkpoint and must ask the
+  human to type `yes, abandon` after showing current remote evidence and the
+  abandoned-unpushed-work basis.
 
 ## Dispatch
 
@@ -168,7 +187,12 @@ After one safe assignment:
 
 1. Update/preserve the runner-owned checkpoint artifacts.
 2. Push work branch plus coordination branch atomically where supported.
-3. Print the next `bk sync` instruction for the human.
+3. Print exactly:
+
+```text
+Done. Now run: bk sync
+```
+
 4. Stop. Do not chain into the next package.
 ```
 
@@ -229,11 +253,13 @@ Expected:
 
 - `sync` fetches/safely fast-forwards or blocks with a clear `FailureCode`;
 - `sync` prints one first-line `NEXT:`;
+- `sync` prints and, when possible, copies `ChatCommand`;
 - `sync -Coverage` covers representative boundary partitions without asking
   the user to run individual scenario ids;
 - shell-side `work` does not execute tasks and tells the user to use `/bk work`;
 - Claude Code lists/recognizes `/bk` and `/bk-sync` after skills are created or after restarting if needed;
-- `/bk work` refuses to proceed if sync/start gates are not satisfied.
+- `/bk work`, `/bk resume`, and `/bk takeover` refuse to proceed if sync/start
+  gates or window-role gates are not satisfied.
 
 ## Stop Conditions
 

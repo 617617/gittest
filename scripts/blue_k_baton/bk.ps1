@@ -4,16 +4,22 @@ param(
     [string]$Command = "sync",
 
     [string]$Scenario = "ready_codex_main",
+    [switch]$Coverage,
     [switch]$All,
     [switch]$List,
     [switch]$NoFastForward
 )
 
 $ErrorActionPreference = "Stop"
+$ScenarioSpecified = $PSBoundParameters.ContainsKey("Scenario")
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = (Resolve-Path (Join-Path $ScriptDir "..\..")).Path
-$Simulator = Join-Path $ScriptDir "bk_sync_sim.py"
+$SimulatorCandidates = @(
+    (Join-Path $ScriptDir "bk_sync_sim.py"),
+    (Join-Path $RepoRoot "blue-k-git-baton-testkit\scripts\bk_sync_sim.py")
+)
+$Simulator = $SimulatorCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 
 function Invoke-GitText {
     param([string[]]$GitArgs)
@@ -41,6 +47,54 @@ function Write-Blocked {
     Write-Output "FailureCode: $Code"
     Write-Output "WHY: $Why"
     Write-Output "RepoRoot: $RepoRoot"
+}
+
+function Copy-NextChatCommand {
+    param([object[]]$OutputLines)
+
+    $commandLine = $OutputLines |
+        ForEach-Object { [string]$_ } |
+        Where-Object { $_ -match "^ChatCommand:\s*/bk " } |
+        Select-Object -First 1
+
+    if (-not $commandLine) {
+        return
+    }
+
+    $command = ($commandLine -replace "^ChatCommand:\s*", "").Trim()
+    if (-not $command -or $command -eq "-") {
+        Write-Output "Clipboard: skipped (no chat command is safe now)"
+        return
+    }
+
+    if (-not (Get-Command Set-Clipboard -ErrorAction SilentlyContinue)) {
+        Write-Output "Clipboard: unavailable; copy manually: $command"
+        return
+    }
+
+    try {
+        Set-Clipboard -Value $command
+        Write-Output "Clipboard: copied $command"
+    } catch {
+        Write-Output "Clipboard: unavailable; copy manually: $command"
+    }
+}
+
+function Invoke-SimulatorCommand {
+    param(
+        [string[]]$SimulatorArgs,
+        [switch]$CopyCommand
+    )
+
+    $output = & python $Simulator @SimulatorArgs 2>&1
+    $code = $LASTEXITCODE
+    if ($output) {
+        $output | ForEach-Object { Write-Output $_ }
+    }
+    if ($CopyCommand) {
+        Copy-NextChatCommand $output
+    }
+    exit $code
 }
 
 function Sync-GitState {
@@ -109,35 +163,60 @@ function Sync-GitState {
 }
 
 function Invoke-Simulator {
+    if (-not $Simulator) {
+        Write-Blocked "SIMULATOR_MISSING" "bk sync decision simulator is missing"
+        exit 2
+    }
+    if ($Coverage) {
+        Write-Output "BK: coverage"
+        Write-Output "CoverageMode: sync decision partitions"
+        Write-Output "UserSurface: bk sync -> /bk work"
+        Write-Output "DeveloperNote: internal scenarios are grouped behind this single sync entry"
+        Invoke-SimulatorCommand @("--all")
+    }
     if ($List) {
-        & python $Simulator --list
-        exit $LASTEXITCODE
+        Write-Output "DeveloperDiagnostic: listing internal scenario ids"
+        Invoke-SimulatorCommand @("--list")
     }
     if ($All) {
-        & python $Simulator --all
-        exit $LASTEXITCODE
+        Write-Output "DeveloperDiagnostic: -All is deprecated; use bk sync -Coverage"
+        Invoke-SimulatorCommand @("--all")
     }
-    & python $Simulator --scenario $Scenario
-    exit $LASTEXITCODE
+    if ($ScenarioSpecified) {
+        Write-Output "DeveloperDiagnostic: -Scenario is for internal debugging; user tests should use bk sync or bk sync -Coverage"
+        Invoke-SimulatorCommand @("--scenario", $Scenario)
+    }
+    Invoke-SimulatorCommand @("--scenario", $Scenario) -CopyCommand
 }
 
 switch ($Command) {
     "sync" {
-        Sync-GitState
+        if (-not ($Coverage -or $All -or $List -or $ScenarioSpecified)) {
+            Sync-GitState
+        }
         Invoke-Simulator
     }
     "work" {
-        Write-Output "NEXT: Send /bk work in the CC or Codex chat window named by bk sync."
+        Write-Output "NEXT: Run bk sync, then paste its ChatCommand in the named CC or Codex chat window."
         Write-Output "WHY: shell-side bk work must not execute Blue-K tasks or call skills directly."
+        Write-Output "CHAT_COMMANDS: /bk work, /bk resume, and /bk takeover are AI-chat commands selected by bk sync."
         exit 0
     }
     "help" {
         Write-Output "Usage:"
-        Write-Output "  bk sync [-Scenario <name>] [-All] [-List]"
+        Write-Output "  bk sync"
+        Write-Output "  bk sync -Coverage"
         Write-Output "  bk work"
         Write-Output ""
         Write-Output "sync fetches origin and safely fast-forwards a clean local branch before printing the decision sheet."
-        Write-Output "work is only a shell-side guard; execute /bk work in the AI chat window."
+        Write-Output "sync also prints ChatCommand and copies it to the clipboard when a chat command is safe."
+        Write-Output "coverage runs simulated boundary partitions behind the same sync entry without touching live git state."
+        Write-Output "work is only a shell-side guard; execute the printed ChatCommand in the AI chat window."
+        Write-Output ""
+        Write-Output "Developer diagnostics:"
+        Write-Output "  bk sync -Scenario <name>"
+        Write-Output "  bk sync -List"
+        Write-Output "  bk sync -All   (deprecated alias for coverage diagnostics)"
         exit 0
     }
 }

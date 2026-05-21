@@ -30,5 +30,6 @@ LastPushedWorkCommit: "1111111"
 LastCoordinationCommit: "bbbbbbb"
 TakeoverPolicy:
   Automatic: false
-  RequiredCommand: "/bk work --takeover --from-last-pushed --abandon-unpushed-ok"
+  RequiredCommand: "/bk takeover"
+  RequiredConfirmation: "yes, abandon"
   Warning: "Unpushed local work on the old holder may be abandoned."

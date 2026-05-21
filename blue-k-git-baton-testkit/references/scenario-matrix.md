@@ -24,9 +24,9 @@ the internal decision partitions covered by `bk sync -Coverage`. Raw
 | `local_behind_origin` | local branch is behind origin | `NEXT: Do not run /bk work` |
 | `atomic_unavailable` | unattended mode cannot push safely | `NEXT: Do not run /bk work` |
 | `active_lease_other_holder` | Another active lease blocks work | `NEXT: Do not run /bk work` |
-| `stale_lease_resume_original` | Stale lease defaults to original holder resume | `NEXT: Resume in original holder chat: /bk work --resume` |
-| `stale_lease_takeover_required` | Cross-side takeover needs explicit risky command | `NEXT: Takeover requires explicit command: /bk work --takeover --from-last-pushed --abandon-unpushed-ok` |
-| `same_holder_dirty_resume` | Dirty same-holder resume routes to runner recovery | `NEXT: Resume in original holder chat: /bk work --resume` |
+| `stale_lease_resume_original` | Stale lease defaults to original holder resume | `NEXT: Resume in original holder chat: /bk resume` |
+| `stale_lease_takeover_required` | Cross-side takeover needs explicit short command plus in-chat confirmation | `NEXT: In CC chat, send: /bk takeover` |
+| `same_holder_dirty_resume` | Dirty same-holder resume routes to runner recovery | `NEXT: Resume in original holder chat: /bk resume` |
 | `competing_running_conflict` | Different running lane/package blocks takeover | `NEXT: Do not run /bk work` |
 | `other_dependency_recovery` | Other runner may show dependency target | `NEXT: In Codex chat, send: /bk work` |
 | `state_conflict` | BATON/progress/audit disagree | `NEXT: Do not run /bk work` |
@@ -59,6 +59,12 @@ the internal decision partitions covered by `bk sync -Coverage`. Raw
 - Does every blocked case name the failure code?
 - Does every runner case say the runner selects/resumes from progress table?
 - Does takeover distinguish last pushed checkpoint from local unpushed work?
+- Does `bk sync` print `Task`, `Holder`, `Last`, `ChatTarget`, and `ChatCommand`
+  so the human does not reconstruct the next action from memory?
+- Does the copied/printed command use short chat verbs (`/bk work`, `/bk resume`,
+  `/bk takeover`) while dangerous takeover still requires in-chat confirmation?
+- Does `/bk takeover` name a takeover-confirming chat and recovery lane instead
+  of looking like ordinary runner execution?
 - Does the protocol block unsafe automatic work when atomic push is missing?
 - Does plan output require consensus before runner execution?
 - Does code output require consensus before runner finalization?

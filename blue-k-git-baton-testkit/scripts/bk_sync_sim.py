@@ -88,15 +88,32 @@ class Decision:
     extra_lines: Tuple[str, ...] = ()
 
     def render(self, scenario: Scenario) -> str:
+        chat_command = command_from_next(self.next_line)
         lines = [
             self.next_line,
+            "Task: blue-k/k1",
+            f"Holder: {role_label(scenario.owner_role)} ({scenario.lane}) {holder_status(scenario)}",
+            f"Last: origin/blue-k/k1@{self.safe_point}",
+            f"ChatTarget: {chat_target_from_next(self.next_line)}",
+            f"ChatCommand: {chat_command}",
+        ]
+        if chat_command != "-":
+            lines.extend(
+                [
+                    f"WindowMatch: {window_match_hint(scenario, self.next_line)}",
+                    "AfterWork: Done. Now run: bk sync",
+                ]
+            )
+        lines.extend(
+            [
             f"HERE: BK_ROLE={scenario.here_role}",
             f"WHY: {self.why}",
             f"UNIT: {self.unit}",
             f"LOCK: {self.lock}",
             f"SAFE_POINT: origin/blue-k/k1@{self.safe_point}",
             f"STOP_IF: {self.stop_if}",
-        ]
+            ]
+        )
         if has_consensus_info(scenario):
             lines.extend(consensus_lines(scenario))
         lines.extend(self.extra_lines)
@@ -189,7 +206,37 @@ def command_from_next(next_line: str) -> str:
         return next_line.split("send:", 1)[1].strip()
     if "command:" in next_line:
         return next_line.split("command:", 1)[1].strip()
+    if "original holder chat:" in next_line:
+        return next_line.split("original holder chat:", 1)[1].strip()
     return "-"
+
+
+def chat_target_from_next(next_line: str) -> str:
+    if "In Codex chat" in next_line:
+        return "Codex chat"
+    if "In CC chat" in next_line:
+        return "CC chat"
+    if "original holder chat" in next_line:
+        return "original holder chat"
+    if "Takeover requires" in next_line:
+        return "takeover-confirming AI chat"
+    return "-"
+
+
+def window_match_hint(scenario: Scenario, next_line: str) -> str:
+    if "/bk takeover" in next_line:
+        return (
+            f"paste into the {role_label(scenario.here_role)} takeover chat; "
+            f"it must show takeover basis for Lane: {scenario.lane}"
+        )
+    return f"paste into the chat whose first reply says Lane: {scenario.lane}"
+
+
+def holder_status(scenario: Scenario) -> str:
+    if scenario.lease_status != "none":
+        stale = "stale" if scenario.stale_lease else "active"
+        return f"{stale} lease; progress={scenario.progress_status}"
+    return f"state={scenario.baton_state}; progress={scenario.progress_status}"
 
 
 def unit_for(scenario: Scenario) -> str:
@@ -487,8 +534,7 @@ def decide(scenario: Scenario) -> Decision:
             if scenario.abandon_unpushed_ok:
                 return Decision(
                     next_line=(
-                        "NEXT: Takeover requires explicit command: "
-                        "/bk work --takeover --from-last-pushed --abandon-unpushed-ok"
+                        f"NEXT: In {role_label(scenario.here_role)} chat, send: /bk takeover"
                     ),
                     why="stale lease; takeover resumes only from last pushed checkpoint",
                     unit=unit_for(scenario),
@@ -498,6 +544,9 @@ def decide(scenario: Scenario) -> Decision:
                     failure_code="STALE_LEASE_TAKEOVER_EXPLICIT",
                     remote_takeover_allowed="yes",
                     takeover_basis="matching running row from last pushed checkpoint",
+                    extra_lines=(
+                        'TakeoverConfirmation: AI chat must require "yes, abandon" after showing current remote evidence',
+                    ),
                 )
             return block(
                 scenario,
@@ -553,7 +602,7 @@ def competing_running(scenario: Scenario) -> bool:
 
 def resume_decision(scenario: Scenario, code: str) -> Decision:
     return Decision(
-        next_line="NEXT: Resume in original holder chat: /bk work --resume",
+        next_line="NEXT: Resume in original holder chat: /bk resume",
         why="matching holder should re-enter runner recovery gate",
         unit=unit_for(scenario),
         lock=lock_for(scenario),
