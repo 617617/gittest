@@ -7,22 +7,49 @@ CC writes a kickoff baton artifact and pushes it; Codex on the other
 host picks it up next time `/temporal-phase-codex-sync` runs. **There
 is no copy-paste chat relay for the kickoff** — it lives in git.
 
-## Step A1 — prompt the user
+## Step A1 — prompt the user (one input only)
 
-Ask, in chat (not in a tool):
+The Temporal project's docs are self-describing: the queue + INDEX +
+R0 decision doc + per-Phase design docs fully encode what each Phase
+does. Codex's Generator reads those on every invocation. So the only
+thing CC actually needs from the user is **which phase-id to authorize**;
+goal / source-anchor / previous-close all derive from the work-repo
+roadmap.
 
-> Please provide:
->   1. A phase-id matching `^phase-[a-zA-Z0-9][a-zA-Z0-9\-]*$`
->      (Temporal's actual naming — `phase-01`, `phase-11`, `phase-r`,
->      `phase-10A`, `phase-08-5`, `phase-14-5` are all valid).
->   2. A short Phase goal description (1-3 sentences).
->   3. (Optional) A source-document anchor: a short string
->      identifying the section of the Temporal workflow doc this
->      Phase implements.
->   4. (Optional) The previous Phase's close.md path (if any).
+For the **very first** Phase (when archive is empty), the queue's
+post-Phase-11 cursor says:
 
-Wait for the user's reply. Then validate `<phase-id>` against the
-regex; if invalid, ask again.
+> Sidecar decision: Phase R R0 = BACKFILL_PHASE_R1_R4; queue R1-R4
+> after Phase 11 execution **if explicitly requested**.
+
+That "if explicitly requested" is the user's 1-bit choice — Phase R
+sidecar, or skip to Phase 12 mainline.
+
+Ask in chat:
+
+> The roadmap after the Phase 11 archive offers two starting points:
+>   - `phase-r` (sidecar — Phase R retrospective evidence backfill;
+>     R0 decision `BACKFILL_PHASE_R1_R4`; must complete before
+>     Phase 13A admits locked benchmark data).
+>   - `phase-12` (next mainline — exploration pilot).
+>
+> Which phase-id should we start with? (Default: `phase-r` per
+> queue cursor recommendation.)
+>
+> You can also provide an explicit phase-id matching
+> `^phase-[a-zA-Z0-9][a-zA-Z0-9\-]*$` (e.g., `phase-13A`,
+> `phase-14-5`) if you want to override the queue's order — not
+> recommended.
+
+For **subsequent** Phases reached via Branch C chain advance, this
+step is **skipped entirely** — Codex's close lane derives
+`NextPhaseId` from the queue/INDEX (see
+`temporal-phase-close/SKILL.md` §"Derivation rule"), and Branch C
+just passes it through (with `[yes / edit / no]` only in
+`ChainMode: confirm`).
+
+Validate the chosen `<phase-id>` against the regex; if invalid, ask
+again.
 
 ## Step A2 — write the kickoff baton artifact locally
 

@@ -89,10 +89,19 @@ a stable ID (`CC-NN`); `temporal-phase-close/SKILL.md` and
 ## Chain mode and auto-advance
 
 When a Phase closes (`<phase-id>__close.md` with terminal `BatonNext:`),
-Codex includes a `NextPhasePlan:` block in the close.md that names the
-proposed next phase-id, its goal, and an optional source-doc anchor
-(see the `temporal-phase-close` SKILL). CC then advances or stops based
-on `workflows/_active.md` `ChainMode:`:
+Codex's close lane writes a `NextPhasePlan:` block. **The `NextPhaseId`
+is derived by Codex from the work-repo roadmap — specifically the
+queue + INDEX.md "Planned but not generated successor package
+candidates" list — NOT from user input.** See the
+`temporal-phase-close` SKILL §"Derivation rule" for the full
+procedure. The user therefore does NOT supply phase-ids on every
+chain step; the user's only authorization moment is the **very first**
+kickoff (Branch A), where they pick between sidecar (Phase R) and
+mainline (Phase 12) per the queue cursor's 1-bit choice. All
+subsequent advance steps derive automatically.
+
+CC then advances or stops based on `workflows/_active.md`
+`ChainMode:`:
 
 | `ChainMode` | What CC does after a `COMPLETED` close with a populated `NextPhasePlan` |
 |-------------|---------------------------------------------------------------------------|
