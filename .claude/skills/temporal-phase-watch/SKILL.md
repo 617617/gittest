@@ -63,6 +63,15 @@ Run `python scripts/check_baton_artifacts.py` (expect
 missing/illegal `BatonNext:` lines, authority violations, and
 more-than-one open Phase. Stop on FAIL (fixes need human triage).
 
+### 3.6. Validate cross-reference consistency
+
+Run `python scripts/check_refs_consistency.py` (expect
+`PASS: cross-reference consistency verified`) — checks every
+`references/*.md` for required load-bearing markers (so a careless
+refactor that drops them is caught here, not at first-Phase runtime)
+and scans every `references/<name>.md` link in SKILL.md +
+references/ for broken targets. Stop on FAIL.
+
 ### 4. Check baton state (informational, non-blocking)
 
 List the most recent files under origin/master in both mailboxes:
@@ -91,6 +100,7 @@ temporal-phase-watch status:
   TemporalPhaseVerifier:     <PASS or FAIL summary from step 3>
   TestkitVerifier:           <PASS or FAIL summary from step 3>
   BatonArtifacts:            <PASS / FAIL summary from step 3.5>
+  RefsConsistency:           <PASS / FAIL summary from step 3.6>
   FromCodex mailbox:         <count> files
   FromCC mailbox:            <count> files
   Monitor (from-codex):      <already-running / newly-started / failed>

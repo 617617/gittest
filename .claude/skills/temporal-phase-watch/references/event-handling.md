@@ -14,3 +14,8 @@ filename's step-tag, as follows:
 
 If you are uncertain what reaction applies, invoke
 `/temporal-phase-start` — it consolidates all the diagnostic logic.
+
+In every case, the read of the artifact's first non-empty line
+`BatonNext: <STATE>` is what drives the next-lane lookup in
+`workflows/temporal-phase/HANDOFF.md` §3.1. Step-tag → reaction
+above is a shortcut; `BatonNext` is the authoritative signal.

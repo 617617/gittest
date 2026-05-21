@@ -54,6 +54,7 @@ Check whether the persistent Monitor with description
 ```bash
 python scripts/verify_temporal_phase_skills.py
 python scripts/check_baton_artifacts.py
+python scripts/check_refs_consistency.py
 python blue-k-git-baton-testkit/scripts/verify_project_scoped_skills.py
 ```
 

@@ -547,6 +547,15 @@ count.
    must load before doing meaningful work. Scattered "see references/
    X.md" mentions buried in step text are easier to ignore.
 
+4. **Long-term, cross-reference rot still happens** — the AI
+   updates one file, forgets the other. Mitigation:
+   `scripts/check_refs_consistency.py` per-reference required-marker
+   list (load-bearing tokens that MUST appear) plus a broken-link
+   scan over `references/<name>.md` mentions. The watcher runs it
+   as step 3.6 so drift surfaces immediately on session boot. When
+   adding a new reference file, append its required markers to the
+   checker's `REFERENCE_MARKERS` dict.
+
 ---
 
 ## P18 — On-demand sync skill on the non-orchestrator side

@@ -117,6 +117,8 @@ before shipping.
 - [ ] `python scripts/verify_<preset>_skills.py` → `PASS`.
 - [ ] `python scripts/check_baton_artifacts.py` → `PASS` (mailboxes
       empty is fine).
+- [ ] `python scripts/check_refs_consistency.py` → `PASS` (catches
+      cross-reference rot between SKILL.md and `references/`).
 - [ ] All other presets' verifiers still PASS (run them all).
 - [ ] Open a fresh CC session: SessionStart hook surfaces the new
       orchestrator and watcher.
