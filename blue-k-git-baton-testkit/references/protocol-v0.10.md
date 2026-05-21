@@ -178,6 +178,17 @@ Consensus is synthesis, not a bypass:
 - Waiver means "allow missing substitute input"; it is not a PASS opinion.
 - Waiver/substitute cases cannot use light auto-accept.
 
+Review and repair ownership:
+
+- Both CC and Codex must leave independent review opinions before consensus
+  synthesis (plan kind and code kind). Synthesis is single-owner; review input
+  is dual-source.
+- The synthesizer also owns the follow-up repair on the same side: plan
+  consensus is synthesized by CC and `planner_repair` returns to
+  `blue-k-planner` (CC); code consensus is synthesized by Codex and
+  `fix_required` returns to the Codex runner fix lane. Cross-side editing of
+  the same subject is not permitted.
+
 Between `SubjectCommit` and `AcceptanceCommit`, only files under:
 
 ```text

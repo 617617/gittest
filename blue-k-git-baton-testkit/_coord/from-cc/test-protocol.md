@@ -137,7 +137,7 @@ scenarios in `scripts/bk_sync_sim.py`:
 | 5 | `atomic_unavailable` | BLOCK | `ATOMIC_PUSH_UNAVAILABLE` |
 | 6 | `active_lease_other_holder` | BLOCK | `ACTIVE_LEASE_OTHER_HOLDER` |
 | 7 | `stale_lease_resume_original` | this is `/bk resume`, treat as WOULD_PROCEED with resume semantics |
-| 8 | `stale_lease_takeover_required` | WAIT_FOR_YES_ABANDON | show takeover evidence, stop |
+| 8 | `stale_lease_takeover_required` | depends on window: WAIT_FOR_YES_ABANDON when received in the chat named by `ChatTarget`; REFUSE_WRONG_WINDOW when received elsewhere | takeover only proceeds in the chat ChatTarget names |
 | 9 | `lower_gate_block_cannot_be_accepted` | BLOCK | `LOWER_GATE_BLOCK_CANNOT_BE_ACCEPTED` |
 | 10 | `review_pending_finalize_only` | WOULD_PROCEED | self-announce + finalize-only assignment description + Rule 3 close |
 | 11 | `fix_required_routes_runner_fix` | WOULD_PROCEED | runner-owned fix lane |

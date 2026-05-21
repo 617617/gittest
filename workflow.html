@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Blue-K Git Baton — v0.10 Workflow &amp; Testkit Walkthrough</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --panel: #161a23;
+    --panel-2: #1d2230;
+    --line: #2a3142;
+    --ink: #e6e9ef;
+    --muted: #8b93a7;
+    --accent: #4f8cff;
+    --cc: #5ad1c1;
+    --codex: #f0a868;
+    --mixed: #c084fc;
+    --pass: #4ade80;
+    --block: #f87171;
+    --warn: #facc15;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 14px/1.55 -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    padding: 32px 24px 64px;
+  }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 32px 0 12px; color: var(--muted); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  h3 { font-size: 14px; margin: 0 0 6px; }
+  .sub { color: var(--muted); margin-bottom: 24px; }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--cc); background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 12px 0 8px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--panel); border: 1px solid var(--line);
+    padding: 4px 10px; border-radius: 999px; font-size: 12px;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .dot.cc { background: var(--cc); }
+  .dot.codex { background: var(--codex); }
+  .dot.mixed { background: var(--mixed); }
+  .dot.human { background: var(--accent); }
+  .dot.pass { background: var(--pass); }
+  .dot.block { background: var(--block); }
+
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+    align-items: stretch;
+    margin-top: 8px;
+  }
+  .step {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px;
+    position: relative;
+  }
+  .step .num {
+    position: absolute; top: -10px; left: -10px;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--accent); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .step h3 { font-size: 13px; }
+  .step p { margin: 0; color: var(--muted); font-size: 12px; }
+  .step .who {
+    display: inline-block; font-size: 11px; padding: 2px 8px;
+    border-radius: 999px; margin-bottom: 8px;
+    background: var(--panel-2); border: 1px solid var(--line);
+  }
+  .step.cc    .who { color: var(--cc); }
+  .step.codex .who { color: var(--codex); }
+  .step.mixed .who { color: var(--mixed); }
+  .step.human .who { color: var(--accent); }
+
+  .lanes {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+  }
+  .lane {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px;
+  }
+  .lane .name { font-family: ui-monospace, monospace; font-size: 12px; color: var(--ink); }
+  .lane .owner { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .truth { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .truth .box {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 14px;
+  }
+  .truth .label { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+  .truth code { display: block; padding: 8px 10px; margin-top: 8px; word-break: break-all; }
+
+  .sm { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .state {
+    background: var(--panel-2); border: 1px solid var(--line);
+    padding: 6px 12px; border-radius: 999px; font-family: ui-monospace, monospace; font-size: 12px;
+  }
+  .state.pass  { border-color: var(--pass); color: var(--pass); }
+  .state.warn  { border-color: var(--warn); color: var(--warn); }
+  .state.block { border-color: var(--block); color: var(--block); }
+  .arrow { color: var(--muted); }
+
+  .gates { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .gate {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 12px;
+  }
+  .gate h4 { margin: 0 0 4px; font-size: 13px; }
+  .gate small { color: var(--muted); }
+
+  ul.rules { margin: 8px 0 0; padding-left: 18px; color: var(--muted); }
+  ul.rules li { margin: 4px 0; }
+  ul.rules b { color: var(--ink); font-weight: 600; }
+
+  .contract { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .contract .rule {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 14px;
+  }
+  .contract .rule h4 { margin: 0 0 8px; font-size: 13px; color: var(--ink); }
+  .contract .rule pre {
+    background: var(--panel-2); border: 1px solid var(--line);
+    padding: 8px 10px; border-radius: 6px;
+    font-size: 11px; color: var(--cc); margin: 6px 0;
+    overflow-x: auto;
+  }
+
+  .channel { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .channel .side {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 14px;
+  }
+  .channel .side h4 { margin: 0 0 8px; font-size: 13px; }
+  .channel .side .path {
+    font-family: ui-monospace, monospace; font-size: 11px;
+    color: var(--cc); background: var(--panel-2);
+    padding: 6px 10px; border-radius: 6px; margin: 4px 0;
+    display: block;
+  }
+  .channel .arrow-row {
+    text-align: center; font-size: 22px; color: var(--accent);
+    grid-column: 1 / -1; margin: -6px 0;
+  }
+
+  .walkthrough {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+  }
+  .walkthrough .stage {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px;
+    font-size: 11px;
+  }
+  .walkthrough .stage .label {
+    color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .walkthrough .stage .file {
+    font-family: ui-monospace, monospace; color: var(--cc);
+    font-size: 10px; word-break: break-all;
+  }
+  .walkthrough .stage.cc    { border-color: var(--cc); }
+  .walkthrough .stage.codex { border-color: var(--codex); }
+
+  .lessons {
+    background: var(--panel); border: 1px solid var(--block);
+    border-radius: 10px; padding: 14px;
+  }
+  .lessons h3 { color: var(--block); margin-bottom: 8px; }
+  .lessons ul { margin: 4px 0 0; padding-left: 18px; color: var(--ink); }
+  .lessons ul li b { color: var(--warn); }
+
+  @media (max-width: 880px) {
+    .flow, .lanes, .gates, .contract, .walkthrough { grid-template-columns: 1fr 1fr; }
+    .truth, .channel { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Blue-K Git Baton — v0.10 Workflow &amp; Testkit Walkthrough</h1>
+  <div class="sub">
+    Cross-machine CC + Codex collaboration through Git only.
+    <code>protocol v0.10</code> · forget-safe human surface · git-mediated async coordination
+  </div>
+
+  <div class="legend">
+    <span class="chip"><span class="dot human"></span>Human</span>
+    <span class="chip"><span class="dot cc"></span>CC (Claude)</span>
+    <span class="chip"><span class="dot codex"></span>Codex</span>
+    <span class="chip"><span class="dot mixed"></span>Mixed lane</span>
+    <span class="chip"><span class="dot pass"></span>Allowed</span>
+    <span class="chip"><span class="dot block"></span>Refused</span>
+  </div>
+
+  <!-- ============ FORGET-SAFE LOOP ============ -->
+  <h2>The Forget-Safe Loop (v0.10)</h2>
+  <div class="flow">
+    <div class="step human">
+      <div class="num">1</div>
+      <span class="who">Human · Shell</span>
+      <h3>bk sync</h3>
+      <p>Read-only fetch + decision sheet. Prints <code>NEXT</code>, <code>Task</code>, <code>Holder</code>, <code>ChatTarget</code>, <code>WindowMatch</code>, copies <code>ChatCommand</code> to clipboard.</p>
+    </div>
+    <div class="step human">
+      <div class="num">2</div>
+      <span class="who">Human</span>
+      <h3>Paste into named window</h3>
+      <p>Match <code>WindowMatch</code> against the chat's first <code>I am ... Lane: ...</code> line. Wrong window = AI refuses.</p>
+    </div>
+    <div class="step cc">
+      <div class="num">3</div>
+      <span class="who">AI · Chat</span>
+      <h3>/bk work (or resume / takeover)</h3>
+      <p>Self-announce, run self-check block, check lease + head + clean + role, then act exactly one assignment.</p>
+    </div>
+    <div class="step codex">
+      <div class="num">4</div>
+      <span class="who">AI · Skill</span>
+      <h3>Execute one assignment</h3>
+      <p>Plan / audit / run / review / consensus — exactly what BATON named. Stop at next safe point.</p>
+    </div>
+    <div class="step human">
+      <div class="num">5</div>
+      <span class="who">AI → Git</span>
+      <h3>Atomic push + closing</h3>
+      <p><code>git push --atomic origin &lt;work&gt; blue-k/coordination</code> then end with exact line <code>Done. Now run: bk sync</code>.</p>
+    </div>
+  </div>
+
+  <!-- ============ FORGET-SAFE RULE ============ -->
+  <h2>Forget-Safe Rule</h2>
+  <div class="truth">
+    <div class="box">
+      <div class="label">The only command a human must remember</div>
+      <code>bk sync</code>
+      <ul class="rules">
+        <li>Run at any time, in any state — never destructive.</li>
+        <li>Prints exactly one correct next action with a copy-pasteable <code>ChatCommand</code>.</li>
+        <li>If something is wrong: prints a <b>FailureCode</b> with full status fields, never half-applies a fix.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <div class="label">Three verbs the AI side may receive — humans never type these from memory</div>
+      <ul class="rules">
+        <li><code>/bk work</code> — normal start</li>
+        <li><code>/bk resume</code> — same-holder recovery only</li>
+        <li><code>/bk takeover</code> — cross-side from last pushed; requires <code>yes, abandon</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ AI CHAT CONTRACT ============ -->
+  <h2>AI Chat Contract — Three Rules (v0.10)</h2>
+  <div class="contract">
+    <div class="rule">
+      <h4>Rule 1 · Self-announce</h4>
+      <p style="color: var(--muted); font-size: 12px;">First non-empty reply line, before any tool call or repo read.</p>
+<pre>I am &lt;CC|Codex&gt;. Lane: &lt;lane&gt;.</pre>
+      <p style="color: var(--muted); font-size: 12px;">Human matches against <code>WindowMatch</code>.</p>
+    </div>
+    <div class="rule">
+      <h4>Rule 2 · Refuse wrong-window</h4>
+      <p style="color: var(--muted); font-size: 12px;">If <code>ChatTarget</code> &ne; this chat:</p>
+      <ul class="rules">
+        <li>Acknowledge wrong-window paste</li>
+        <li>Do not lease, edit, push, invoke skill</li>
+        <li>Reprint correct <code>ChatTarget</code> + <code>ChatCommand</code></li>
+      </ul>
+    </div>
+    <div class="rule">
+      <h4>Rule 3 · Fixed closing</h4>
+      <p style="color: var(--muted); font-size: 12px;">After one safe assignment, atomic push then end with exactly:</p>
+<pre>Done. Now run: bk sync</pre>
+      <p style="color: var(--muted); font-size: 12px;">Byte-exact. No chaining to next package.</p>
+    </div>
+  </div>
+
+  <!-- ============ LANES ============ -->
+  <h2>Lanes &amp; Ownership</h2>
+  <div class="lanes">
+    <div class="lane"><div class="name">blue-k-planner</div><div class="owner"><span class="dot cc"></span> CC</div></div>
+    <div class="lane"><div class="name">blue-k-plan-audit</div><div class="owner"><span class="dot cc"></span> CC</div></div>
+    <div class="lane"><div class="name">blue-k-main-runner</div><div class="owner"><span class="dot codex"></span> Codex</div></div>
+    <div class="lane"><div class="name">blue-k-other-runner</div><div class="owner"><span class="dot codex"></span> Codex</div></div>
+    <div class="lane"><div class="name">blue-k-other-index</div><div class="owner"><span class="dot codex"></span> Codex</div></div>
+    <div class="lane"><div class="name">blue-k-consensus</div><div class="owner"><span class="dot mixed"></span> Mixed</div></div>
+  </div>
+  <p style="color: var(--muted); font-size: 12px; margin-top: 8px;">
+    Owner = lane runner / consensus synthesizer. <b>Reviews are always dual-source:</b>
+    both CC and Codex leave independent opinions before the synthesizer decides.
+  </p>
+
+  <!-- ============ TRUTH SOURCES ============ -->
+  <h2>Truth Sources</h2>
+  <div class="truth">
+    <div class="box">
+      <div class="label">Control truth — sole authority for "what to do next"</div>
+      <code>origin/blue-k/coordination:.blue-k/BATON.yaml</code>
+      <ul class="rules">
+        <li>Work-branch BATON copies are <b>snapshots only</b>.</li>
+        <li>Unattended push requires <b>atomic</b> work + coordination push.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <div class="label">Business truth — actual output lives here</div>
+      <code>blue-k/&lt;task&gt;</code>
+      <ul class="rules">
+        <li>Plans, progress, package docs, evidence, consensus, acceptance.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ STATE MACHINE ============ -->
+  <h2>Runner State Machine</h2>
+  <div class="sm">
+    <span class="state">running</span>
+    <span class="arrow">→</span>
+    <span class="state warn">review_pending</span>
+    <span class="arrow">+ accepted →</span>
+    <span class="state pass">runner finalize</span>
+    <span class="arrow">→</span>
+    <span class="state pass">done</span>
+  </div>
+  <div class="sm" style="margin-top: 10px;">
+    <span class="state warn">review_pending</span>
+    <span class="arrow">+ fix_required →</span>
+    <span class="state block">runner fix lane</span>
+    <span class="arrow">→</span>
+    <span class="state">new checkpoint</span>
+    <span class="arrow">→</span>
+    <span class="state warn">review_pending</span>
+  </div>
+
+  <!-- ============ GATES ============ -->
+  <h2>Gate Precedence — Consensus is Synthesis, Not a Bypass</h2>
+  <div class="gates">
+    <div class="gate">
+      <h4>1 · Lower gate</h4>
+      <small>plan-audit / traceable review / package gate</small>
+      <ul class="rules">
+        <li><b>BLOCK</b> → planner repair or runner fix</li>
+        <li><b>PASS / accepted WARN</b> → consensus may run</li>
+      </ul>
+    </div>
+    <div class="gate">
+      <h4>2 · Consensus</h4>
+      <small>light · standard · full</small>
+      <ul class="rules">
+        <li><b>plan</b> default <code>standard</code>, synthesized by CC</li>
+        <li><b>code</b> default <code>light</code> auto-accept on all-PASS, synthesized by Codex</li>
+        <li>Both AIs leave independent review opinions first</li>
+      </ul>
+    </div>
+    <div class="gate">
+      <h4>3 · Human accept_risk</h4>
+      <small>last-resort override</small>
+      <ul class="rules">
+        <li>May accept PASS or explicit WARN</li>
+        <li><b>Cannot</b> override lower-gate BLOCK</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ WRAPPER BOUNDARY ============ -->
+  <h2>Wrapper Boundary</h2>
+  <div class="truth">
+    <div class="box">
+      <div class="label" style="color: var(--pass);">bk.ps1 MAY</div>
+      <ul class="rules">
+        <li>fetch remote refs</li>
+        <li>read BATON, progress, audit, review, consensus</li>
+        <li>acquire coordination lease (CAS)</li>
+        <li>call the correct Blue-K skill in the correct chat</li>
+        <li>publish one final handoff after a safe point</li>
+        <li>copy <code>ChatCommand</code> to clipboard (fail-soft)</li>
+        <li>print status dashboard via <code>bk status</code></li>
+      </ul>
+    </div>
+    <div class="box">
+      <div class="label" style="color: var(--block);">bk.ps1 MUST NOT</div>
+      <ul class="rules">
+        <li>select packages</li>
+        <li>write progress tables</li>
+        <li>run <code>stage-loop-auto</code> or code-graph gates</li>
+        <li>create runner checkpoint commits</li>
+        <li>convert lower-gate BLOCK → PASS</li>
+        <li>merge, rebase, force-push, or auto-takeover across machines</li>
+        <li>ask the human to run raw <code>git pull</code> during normal operation</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ COORD CHANNEL ============ -->
+  <h2>Async Coordination Channel — Git as the Bus</h2>
+  <div class="channel">
+    <div class="side">
+      <h4 style="color: var(--cc);">CC → Codex</h4>
+      <span class="path">blue-k-git-baton-testkit/_coord/from-cc/test-protocol.md</span>
+      <span class="path">blue-k-git-baton-testkit/_coord/from-cc/test-start.md</span>
+      <span class="path">blue-k-git-baton-testkit/_coord/from-cc/autopilot-decision.md</span>
+      <span class="path">blue-k-git-baton-testkit/_coord/from-cc/review/&lt;scenario&gt;.md</span>
+    </div>
+    <div class="side">
+      <h4 style="color: var(--codex);">Codex → CC</h4>
+      <span class="path">blue-k-git-baton-testkit/_coord/from-codex/registration-ack.md</span>
+      <span class="path">blue-k-git-baton-testkit/_coord/from-codex/test-ready.md</span>
+      <span class="path">blue-k-git-baton-testkit/_coord/from-codex/handoff-request-*.md</span>
+      <span class="path">blue-k-git-baton-testkit/_coord/from-codex/test-results/&lt;scenario&gt;.md</span>
+      <span class="path">blue-k-git-baton-testkit/_coord/from-codex/test-blocker-*.md</span>
+    </div>
+    <div class="arrow-row">↕ git fetch / git push — no chat DM ever ↕</div>
+  </div>
+
+  <!-- ============ TESTKIT WALKTHROUGH ============ -->
+  <h2>Testkit Walkthrough — Per-Scenario Gating</h2>
+  <div class="walkthrough">
+    <div class="stage codex"><div class="label">1 · Codex</div>register skills<div class="file">.codex/skills.json</div></div>
+    <div class="stage codex"><div class="label">2 · Codex</div>verifier PASS<div class="file">verify_project_scoped_skills.py</div></div>
+    <div class="stage codex"><div class="label">3 · Codex</div>test-ready signal<div class="file">test-ready.md</div></div>
+    <div class="stage cc"><div class="label">4 · CC</div>authorize start<div class="file">test-start.md</div></div>
+    <div class="stage codex"><div class="label">5 · Codex</div>one result per scenario<div class="file">test-results/&lt;s&gt;.md</div></div>
+    <div class="stage cc"><div class="label">6 · CC</div>review per scenario<div class="file">review/&lt;s&gt;.md</div></div>
+    <div class="stage codex"><div class="label">7 · Codex</div>completion<div class="file">test-complete.md</div></div>
+  </div>
+  <p style="color: var(--muted); font-size: 12px; margin-top: 8px;">
+    14 scenarios in <code>bk_sync_sim.py</code> mapped to 4 outcomes:
+    <code>WOULD_PROCEED</code> · <code>REFUSE_WRONG_WINDOW</code> · <code>BLOCK</code> · <code>WAIT_FOR_YES_ABANDON</code>.
+    Codex must wait for CC's review of scenario N before pushing scenario N+1
+    (<code>ContinueWithoutReview: no</code>).
+  </p>
+
+  <!-- ============ CC SIDE TOOLING ============ -->
+  <h2>CC-Side Tooling — Watchers &amp; Auto-Arm</h2>
+  <div class="truth">
+    <div class="box">
+      <div class="label">/bk-watch skill (.claude/skills/bk-watch/SKILL.md)</div>
+      <ul class="rules">
+        <li>idempotent — checks running Monitors before starting new ones</li>
+        <li>pulls origin, runs verifier, checks Codex readiness</li>
+        <li>arms Monitor #1 (test-results) and Monitor #2 (coord top-level)</li>
+        <li>prints fixed status block</li>
+      </ul>
+    </div>
+    <div class="box">
+      <div class="label">SessionStart hook (.claude/settings.json)</div>
+      <ul class="rules">
+        <li>injects a reminder telling CC to invoke <code>/bk-watch</code></li>
+        <li>project-scoped (committed) — does not touch global settings</li>
+        <li>activates after Claude Code restart or <code>/hooks</code> reload</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ LESSONS LEARNED ============ -->
+  <h2>Lessons Learned — First Walkthrough</h2>
+  <div class="lessons">
+    <h3>What broke and why</h3>
+    <ul>
+      <li><b>ContinueWithoutReview: yes was a misjudgment.</b>
+        CC authorized batch autopilot for speed; Codex pushed all 14 scenarios
+        before per-step review could fire. This defeated the dual-AI peer-review
+        value the test exists to provide.</li>
+      <li><b>The fix is enforced by default now:</b>
+        <code>autopilot-decision.md</code> ships with <code>ContinueWithoutReview: no</code>;
+        Codex must observe <code>review/&lt;scenario&gt;.md</code> for scenario N before
+        pushing scenario N+1.</li>
+      <li><b>Two Monitors are required, not one.</b>
+        Monitor #1 only watches <code>test-results/</code>; Monitor #2 watches the
+        <code>_coord/from-codex/</code> top level. Coordination questions
+        (<code>handoff-request-*</code>, <code>test-blocker-*</code>) land on the top level —
+        without Monitor #2 they slip past CC silently.</li>
+      <li><b>Headless <code>codex.exe</code> on this Windows host is access-denied
+        from PowerShell.</b>
+        Unattended Mode B is therefore blocked until a standalone Codex CLI
+        or a GitHub Action runner is set up. Tracked for v0.11 autonomy work,
+        does not block v0.10 testing.</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>
