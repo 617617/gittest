@@ -28,6 +28,11 @@
       "codexLane": true
     },
     {
+      "name": "blue-k-consensus",
+      "path": "blue-k-git-baton-testkit/skills/blue-k-consensus",
+      "mixedLane": true
+    },
+    {
       "name": "traceable-plan",
       "path": "blue-k-git-baton-testkit/skills/traceable-plan"
     },

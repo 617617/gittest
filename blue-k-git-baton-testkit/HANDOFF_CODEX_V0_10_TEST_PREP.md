@@ -21,6 +21,10 @@ blue-k-other-runner
 blue-k-other-index
 ```
 
+You also participate in the mixed lane `blue-k-consensus` when `bk sync`
+selects `Codex chat` for code consensus. CC/Claude normally owns plan
+consensus in the same lane.
+
 You do not own:
 
 ```text
@@ -49,6 +53,7 @@ Then read your lane SKILL.md when an assignment lands:
 blue-k-git-baton-testkit/skills/blue-k-main-runner/SKILL.md
 blue-k-git-baton-testkit/skills/blue-k-other-runner/SKILL.md
 blue-k-git-baton-testkit/skills/blue-k-other-index/SKILL.md
+blue-k-git-baton-testkit/skills/blue-k-consensus/SKILL.md
 ```
 
 Each of those lane skills now contains an `AI Chat Contract (v0.10)` section
@@ -66,7 +71,7 @@ Before any tool call, before any repo read, before reading BATON, your first
 non-empty reply line must be exactly:
 
 ```text
-I am Codex. Lane: <one of: blue-k-main-runner | blue-k-other-runner | blue-k-other-index>.
+I am Codex. Lane: <one of: blue-k-main-runner | blue-k-other-runner | blue-k-other-index | blue-k-consensus>.
 ```
 
 If the invocation legitimately owns more than one of these lanes in the same
@@ -258,7 +263,7 @@ of them appears in `scripts/bk_sync_sim.py` and
 | `atomic_unavailable` | Stop with `ATOMIC_PUSH_UNAVAILABLE` |
 | `active_lease_other_holder` | Print failure code; do not act |
 | `stale_lease_resume_original` | Tell human to use `/bk resume` in original holder chat |
-| `stale_lease_takeover_required` | Show takeover evidence; wait for `yes, abandon` |
+| `stale_lease_takeover_required` | If `ChatTarget` is CC, refuse as wrong-window; if `ChatTarget` is Codex, show takeover evidence and wait for `yes, abandon` |
 | `same_holder_dirty_resume` | Re-enter runner recovery gate; do not auto-clean |
 | `competing_running_conflict` | Block, even on takeover request |
 | `other_dependency_recovery` | Show `DependencyRecoveryTarget`; honor the fix-target ownership |
@@ -274,9 +279,12 @@ of them appears in `scripts/bk_sync_sim.py` and
 
 Before the human runs the first `bk sync`, confirm each item:
 
-- [ ] You have pulled the latest `master` of 617617/gittest.
+- [ ] Your local `master` is at the latest `origin/master`. Use `bk sync` for
+      normal workflow sync; a test-environment fetch is acceptable only before
+      this preparation checklist.
 - [ ] You have read every file in section 2.
-- [ ] You have read your three lane SKILL.md files.
+- [ ] You have read your runner/index lane SKILL.md files and
+      `blue-k-consensus/SKILL.md`.
 - [ ] You can print the Rule 1 line for each lane.
 - [ ] You know the exact byte-for-byte closing line for Rule 3.
 - [ ] You can list every failure code in section 4 from memory and know
@@ -287,7 +295,7 @@ Before the human runs the first `bk sync`, confirm each item:
 Acknowledge to the human by replying with exactly:
 
 ```text
-I am Codex. Lane: blue-k-main-runner blue-k-other-runner blue-k-other-index.
+I am Codex. Lane: blue-k-main-runner blue-k-other-runner blue-k-other-index blue-k-consensus.
 v0.10 test-prep acknowledged.
 ```
 

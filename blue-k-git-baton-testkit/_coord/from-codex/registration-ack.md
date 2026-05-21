@@ -2,7 +2,7 @@
 
 Status: PASS
 
-I am Codex. Lane: blue-k-main-runner blue-k-other-runner blue-k-other-index.
+I am Codex. Lane: blue-k-main-runner blue-k-other-runner blue-k-other-index blue-k-consensus.
 v0.10 test-prep acknowledged.
 
 Project-scoped registration source:
@@ -25,6 +25,12 @@ blue-k-other-runner
 blue-k-other-index
 ```
 
+Mixed lane:
+
+```text
+blue-k-consensus
+```
+
 Verification performed:
 
 - Read `HANDOFF_CODEX_PROJECT_SCOPED_SKILLS.md`.
@@ -32,6 +38,7 @@ Verification performed:
 - Read `references/ai-chat-contract.md`.
 - Confirmed the portable skill closure exists under project-relative paths.
 - Confirmed the three Codex-owned lane skills include `AI Chat Contract (v0.10)`.
+- Confirmed the mixed consensus lane is registered project-locally.
 - Confirmed no global Codex skill directory is needed for this testkit.
 - Added `.codex/skills.json` as a repo-local registration manifest with
   `allowGlobalFallback: false`.

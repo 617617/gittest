@@ -47,12 +47,13 @@ blue-k-git-baton-testkit/references/ai-chat-contract.md
 blue-k-git-baton-testkit/references/scenario-matrix.md
 ```
 
-Then your three lane skills:
+Then your Codex-side lane skills:
 
 ```text
 blue-k-git-baton-testkit/skills/blue-k-main-runner/SKILL.md
 blue-k-git-baton-testkit/skills/blue-k-other-runner/SKILL.md
 blue-k-git-baton-testkit/skills/blue-k-other-index/SKILL.md
+blue-k-git-baton-testkit/skills/blue-k-consensus/SKILL.md
 ```
 
 Each lane skill now has an `AI Chat Contract (v0.10)` section at the top.
@@ -69,6 +70,7 @@ blue-k-git-baton-testkit/skills/blue-k-plan-audit/
 blue-k-git-baton-testkit/skills/blue-k-main-runner/
 blue-k-git-baton-testkit/skills/blue-k-other-runner/
 blue-k-git-baton-testkit/skills/blue-k-other-index/
+blue-k-git-baton-testkit/skills/blue-k-consensus/
 blue-k-git-baton-testkit/skills/traceable-plan/
 blue-k-git-baton-testkit/skills/pre-doc-review/
 blue-k-git-baton-testkit/skills/stage-loop-auto/
@@ -77,7 +79,7 @@ blue-k-git-baton-testkit/skills/doc-review/
 blue-k-git-baton-testkit/skills/traceable-review/
 ```
 
-You own runtime invocation on the Codex side for these three lanes:
+You own runtime invocation on the Codex side for these three runner/index lanes:
 
 ```text
 blue-k-main-runner
@@ -85,8 +87,12 @@ blue-k-other-runner
 blue-k-other-index
 ```
 
-CC owns `blue-k-planner` and `blue-k-plan-audit`. If `bk sync` selects one
-of those, refuse per the wrong-window rule in `ai-chat-contract.md`.
+`blue-k-consensus` is mixed: CC normally owns plan consensus synthesis, and
+Codex normally owns code consensus synthesis. Follow the `ChatTarget` and
+`WindowMatch` printed by `bk sync`.
+
+CC owns `blue-k-planner` and `blue-k-plan-audit`. If `bk sync` selects one of
+those, refuse per the wrong-window rule in `ai-chat-contract.md`.
 
 ## Each skill already ships its own Codex metadata
 
@@ -148,8 +154,8 @@ file outside the repository.
 After registration, all of these must be true:
 
 - [ ] Running `codex` interactive from the repository root lets you invoke
-      `$blue-k-main-runner`, `$blue-k-other-runner`, and
-      `$blue-k-other-index` by name.
+      `$blue-k-main-runner`, `$blue-k-other-runner`,
+      `$blue-k-other-index`, and `$blue-k-consensus` by name.
 - [ ] The same invocations from any other working directory either fail or
       route through an explicit `--cd <repo-root>` argument; they must not
       succeed by falling back to a globally registered copy.
@@ -168,8 +174,9 @@ Run the wrapper to confirm round-trip:
 .\blue-k-git-baton-testkit\scripts\bk.ps1 sync -Coverage
 ```
 
-The `WindowMatch` line in the output should name one of your three lanes
-when the simulator picks a Codex scenario.
+The `WindowMatch` line in the output should name one of your runner/index
+lanes or the mixed `blue-k-consensus` lane when the simulator picks a Codex
+scenario.
 
 ## How I (CC) will coordinate with you for the actual test
 
@@ -216,7 +223,7 @@ Once you've finished registering project-scoped:
    `HANDOFF_CODEX_V0_10_TEST_PREP.md` section 9:
 
    ```text
-   I am Codex. Lane: blue-k-main-runner blue-k-other-runner blue-k-other-index.
+   I am Codex. Lane: blue-k-main-runner blue-k-other-runner blue-k-other-index blue-k-consensus.
    v0.10 test-prep acknowledged.
    ```
 

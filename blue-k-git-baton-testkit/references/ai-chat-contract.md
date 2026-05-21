@@ -2,8 +2,8 @@
 
 Status: normative
 Applies to: `blue-k-planner`, `blue-k-plan-audit`, `blue-k-main-runner`,
-`blue-k-other-runner`, `blue-k-other-index`, and any future Blue-K lane skill
-invoked through `/bk work`, `/bk resume`, or `/bk takeover`.
+`blue-k-other-runner`, `blue-k-other-index`, `blue-k-consensus`, and any future
+Blue-K lane skill invoked through `/bk work`, `/bk resume`, or `/bk takeover`.
 
 This document is the single source of truth for the in-chat behavior the v0.10
 forget-safe rule depends on. Each lane skill restates the three rules inline
@@ -29,6 +29,7 @@ I am <CC|Codex>. Lane: <lane-or-owned-lane-set>.
   blue-k-main-runner
   blue-k-other-runner
   blue-k-other-index
+  blue-k-consensus
   ```
 
 - If the skill owns more than one lane in this invocation, list them

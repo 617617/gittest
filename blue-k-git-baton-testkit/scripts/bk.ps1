@@ -37,12 +37,33 @@ function Write-Blocked {
     param(
         [string]$Code,
         [string]$Why,
-        [string]$Next = "NEXT: Do not run /bk work"
+        [string]$Next = "NEXT: Do not run /bk work",
+        [string]$LocalDirty = "unknown"
     )
     Write-Output $Next
+    Write-Output "Task: -"
+    Write-Output "Holder: -"
+    Write-Output "Last: -"
+    Write-Output "ChatTarget: -"
+    Write-Output "ChatCommand: -"
     Write-Output "FailureCode: $Code"
+    Write-Output "Lane: -"
+    Write-Output "ProgressFile: -"
+    Write-Output "ProgressIndex: -"
+    Write-Output "ProgressStatus: -"
+    Write-Output "BatonState: unknown"
+    Write-Output "LeaseToken: -"
+    Write-Output "RemoteHead: -"
+    Write-Output "LastPushedCommit: -"
+    Write-Output "LastLocalCommit: -"
+    Write-Output "UnpushedCommits: unknown"
+    Write-Output "LocalDirty: $LocalDirty"
+    Write-Output "RemoteTakeoverAllowed: no"
+    Write-Output "TakeoverBasis: not evaluated"
+    Write-Output "Next command: -"
     Write-Output "WHY: $Why"
     Write-Output "RepoRoot: $RepoRoot"
+    Write-Output "Log path: blue-k-git-baton-testkit/logs/live-sync.log"
 }
 
 function Copy-NextChatCommand {
@@ -126,7 +147,7 @@ function Sync-GitState {
     Write-Output "RemoteHead: $remoteHead"
 
     if ($dirty) {
-        Write-Blocked "LOCAL_DIRTY_BEFORE_SYNC_DECISION" "working tree has tracked or untracked changes; commit/stash/clean before /bk work"
+        Write-Blocked "LOCAL_DIRTY_BEFORE_SYNC_DECISION" "working tree has tracked or untracked changes; commit/stash/clean before /bk work" -LocalDirty "true"
         exit 2
     }
 

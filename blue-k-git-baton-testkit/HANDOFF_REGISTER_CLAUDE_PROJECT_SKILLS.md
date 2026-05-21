@@ -127,6 +127,7 @@ blue-k-plan-audit
 blue-k-main-runner
 blue-k-other-runner
 blue-k-other-index
+blue-k-consensus
 traceable-plan
 pre-doc-review
 stage-loop-auto

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Blue K Consensus"
+  short_description: "Run Blue-K plan or code consensus synthesis as a docs-only lane."
+  default_prompt: "Use $blue-k-consensus to synthesize the current Blue-K consensus topic."
+policy:
+  allow_implicit_invocation: false

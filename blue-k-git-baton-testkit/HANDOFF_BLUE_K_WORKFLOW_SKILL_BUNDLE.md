@@ -36,6 +36,7 @@ Direct Blue-K workflow skills:
 - `blue-k-main-runner`
 - `blue-k-other-runner`
 - `blue-k-other-index`
+- `blue-k-consensus`
 
 Skills required by those workflows:
 
@@ -94,6 +95,9 @@ Keep the division close to the user's preferred CC/Claude plus Codex pairing:
   synthesis.
 - Codex leads `blue-k-main-runner`, `blue-k-other-index`,
   `blue-k-other-runner`, and code consensus synthesis.
+- `blue-k-consensus` is mixed: use `ChatTarget` and `WindowMatch` from
+  `bk sync`; plan synthesis usually goes to CC, code synthesis usually goes to
+  Codex.
 - Both sides can provide independent plan-review and code-review opinions.
 - The synthesizer is not allowed to weaken a lower gate. It only merges review
   opinions into `accepted`, `fix_required`, `planner_repair`, or
@@ -343,6 +347,7 @@ blue-k-git-baton-testkit/HANDOFF.md
 blue-k-git-baton-testkit/HANDOFF_REGISTER_CLAUDE_PROJECT_SKILLS.md
 blue-k-git-baton-testkit/references/protocol-v0.10.md
 blue-k-git-baton-testkit/references/scenario-matrix.md
+blue-k-git-baton-testkit/skills/blue-k-consensus/SKILL.md
 ```
 
 ## Acceptance
