@@ -1,0 +1,6 @@
+interface:
+  display_name: "Stage Loop Auto"
+  short_description: "Auto-runs approved traceable-plan stages with agent-owned gates."
+  default_prompt: "Use $stage-loop-auto to run the next traceable-plan stages automatically."
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Blue K Other Runner"
+  short_description: "Run Blue-K other packages from a progress index."
+  default_prompt: "Use $blue-k-other-runner to continue the docs/mian-k/other package queue."
+policy:
+  allow_implicit_invocation: false

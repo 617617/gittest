@@ -1,0 +1,6 @@
+interface:
+  display_name: "Doc Review"
+  short_description: "Review execution plans before coding."
+  default_prompt: "Use $doc-review to decide whether this execution plan is ready to execute."
+policy:
+  allow_implicit_invocation: false

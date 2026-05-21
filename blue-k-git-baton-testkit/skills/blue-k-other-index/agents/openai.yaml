@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blue K Other Index"
+  short_description: "Build and update Blue-K other minimum-package progress indexes."
+  default_prompt: "Use $blue-k-other-index to index the minimum executable packages under docs/mian-k/other."

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Traceable Plan"
+  short_description: "Generate staged plans with evidence."
+  default_prompt: "Use $traceable-plan to create a staged implementation plan with scope and evidence artifacts."
+policy:
+  allow_implicit_invocation: false

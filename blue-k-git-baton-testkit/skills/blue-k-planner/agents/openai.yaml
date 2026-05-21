@@ -1,0 +1,7 @@
+interface:
+  display_name: "Blue K Planner"
+  short_description: "Manage DND blueprint K-stage locks, archives, and next-K plans."
+  default_prompt: "Use $blue-k-planner to inspect the current K workflow status."
+
+policy:
+  allow_implicit_invocation: false

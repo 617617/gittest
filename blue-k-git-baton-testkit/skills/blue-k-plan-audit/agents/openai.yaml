@@ -1,0 +1,7 @@
+interface:
+  display_name: "Blue K Plan Audit"
+  short_description: "Audit blue-k-planner packages before execution."
+  default_prompt: "Use $blue-k-plan-audit to audit the current mian-k package output before stage-loop-auto execution."
+
+policy:
+  allow_implicit_invocation: false

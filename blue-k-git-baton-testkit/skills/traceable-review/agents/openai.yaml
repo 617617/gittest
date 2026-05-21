@@ -1,0 +1,6 @@
+interface:
+  display_name: "Traceable Review"
+  short_description: "Audit stage work against scope."
+  default_prompt: "Use $traceable-review to audit the completed stage against scope and evidence."
+policy:
+  allow_implicit_invocation: false

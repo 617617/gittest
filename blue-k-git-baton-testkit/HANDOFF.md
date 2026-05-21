@@ -2,10 +2,11 @@
 
 Repository: `https://github.com/617617/gittest`
 
-Local test root:
+Local test root is the repository root containing this handoff. In examples,
+run commands from that root:
 
 ```text
-D:\code\gittest
+<repo-root>
 ```
 
 Your task is to validate the v0.10 forget-safe Blue-K Git baton workflow:
@@ -26,8 +27,9 @@ requires explicit in-chat confirmation before any destructive recovery.
 ## Read First
 
 1. `blue-k-git-baton-testkit/SKILL.md`
-2. `blue-k-git-baton-testkit/references/protocol-v0.10.md`
-3. `blue-k-git-baton-testkit/references/scenario-matrix.md`
+2. `blue-k-git-baton-testkit/HANDOFF_BLUE_K_WORKFLOW_SKILL_BUNDLE.md`
+3. `blue-k-git-baton-testkit/references/protocol-v0.10.md`
+4. `blue-k-git-baton-testkit/references/scenario-matrix.md`
 
 Optional future context: `blue-k-git-baton-testkit/references/autonomy-proposal.md`
 is v0.11-oriented. Do not enable autonomous loops while validating v0.10
@@ -35,7 +37,7 @@ forget-safe behavior.
 
 ## Fast Test Commands
 
-From `D:\code\gittest`:
+From the repository root:
 
 ```powershell
 .\blue-k-git-baton-testkit\scripts\bk.ps1 sync

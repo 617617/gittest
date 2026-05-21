@@ -2,9 +2,9 @@
 
 Audience: Claude Code agent on the real DND backend project.
 
-Source testkit: `D:\code\gittest\blue-k-git-baton-testkit`
+Source testkit: `blue-k-git-baton-testkit`
 
-Target project example: `D:\code\dnd-back\back`
+Target project: the repository root where the workflow is being registered.
 
 Goal: register the Blue-K Git baton workflow so the human only sees the two
 intended entries:
@@ -40,6 +40,7 @@ Use these registrations:
 .claude/skills/bk/SKILL.md        -> supports /bk work, /bk resume, /bk takeover
 .claude/skills/bk-sync/SKILL.md   -> optional Claude-side mirror of shell sync
 scripts/blue_k_baton/bk.ps1       -> shell-side bk sync wrapper
+blue-k-git-baton-testkit/skills/  -> portable Blue-K workflow skill closure
 ```
 
 The required user path is `bk sync` in shell plus the printed chat command in
@@ -57,6 +58,7 @@ HANDOFF.md
 references/protocol-v0.10.md
 references/scenario-matrix.md
 scripts/bk.ps1
+HANDOFF_BLUE_K_WORKFLOW_SKILL_BUNDLE.md
 ```
 
 From the target project, read:
@@ -83,7 +85,7 @@ New-Item -ItemType Directory -Force scripts\blue_k_baton
 2. Copy or adapt the testkit wrapper:
 
 ```powershell
-Copy-Item D:\code\gittest\blue-k-git-baton-testkit\scripts\bk.ps1 scripts\blue_k_baton\bk.ps1
+Copy-Item blue-k-git-baton-testkit\scripts\bk.ps1 scripts\blue_k_baton\bk.ps1
 ```
 
 For the real project, replace simulator-only calls with real BATON inspection.
@@ -111,7 +113,32 @@ New-Item -ItemType Directory -Force .claude\skills\bk
 New-Item -ItemType Directory -Force .claude\skills\bk-sync
 ```
 
-5. Write `.claude/skills/bk/SKILL.md`:
+5. Register or expose the portable Blue-K workflow skill closure from:
+
+```text
+blue-k-git-baton-testkit/skills/
+```
+
+The minimum closure is:
+
+```text
+blue-k-planner
+blue-k-plan-audit
+blue-k-main-runner
+blue-k-other-runner
+blue-k-other-index
+traceable-plan
+pre-doc-review
+stage-loop-auto
+stage-loop
+doc-review
+traceable-review
+```
+
+Use project-local relative paths. Do not point Claude at a machine-specific
+global skill directory.
+
+6. Write `.claude/skills/bk/SKILL.md`:
 
 ```markdown
 ---
@@ -196,7 +223,7 @@ Done. Now run: bk sync
 4. Stop. Do not chain into the next package.
 ```
 
-6. Write `.claude/skills/bk-sync/SKILL.md`:
+7. Write `.claude/skills/bk-sync/SKILL.md`:
 
 ```markdown
 ---

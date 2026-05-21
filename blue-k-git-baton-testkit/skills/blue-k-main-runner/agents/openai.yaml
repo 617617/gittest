@@ -1,0 +1,6 @@
+interface:
+  display_name: "Blue K Main Runner"
+  short_description: "Run Blue-K main trunk packages serially."
+  default_prompt: "Use $blue-k-main-runner to continue the Blue-K main package queue."
+policy:
+  allow_implicit_invocation: false

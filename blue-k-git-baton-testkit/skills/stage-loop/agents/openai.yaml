@@ -1,0 +1,6 @@
+interface:
+  display_name: "Stage Loop"
+  short_description: "Run one approved stage end to end."
+  default_prompt: "Use $stage-loop to run this approved traceable-plan stage end to end."
+policy:
+  allow_implicit_invocation: false

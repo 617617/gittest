@@ -25,20 +25,22 @@ control-plane decisions that decide which chat command `bk sync` should print.
 ## Quick Start
 
 1. Read `HANDOFF.md` first when acting as the other AI.
-2. Read `references/protocol-v0.10.md` before changing the protocol.
-3. Run the normal user sync entry:
+2. Read `HANDOFF_BLUE_K_WORKFLOW_SKILL_BUNDLE.md` when validating the portable
+   project-local Blue-K skill bundle.
+3. Read `references/protocol-v0.10.md` before changing the protocol.
+4. Run the normal user sync entry:
 
 ```powershell
 .\blue-k-git-baton-testkit\scripts\bk.ps1 sync
 ```
 
-4. To test boundary coverage without exposing internal cases to the user:
+5. To test boundary coverage without exposing internal cases to the user:
 
 ```powershell
 .\blue-k-git-baton-testkit\scripts\bk.ps1 sync -Coverage
 ```
 
-5. If the user runs shell-side work by mistake:
+6. If the user runs shell-side work by mistake:
 
 ```powershell
 .\blue-k-git-baton-testkit\scripts\bk.ps1 work
@@ -78,6 +80,17 @@ The simulator intentionally covers edge cases:
 - atomic push unavailable;
 - role mismatch;
 - coordination/work branch race.
+
+## Portable Blue-K Skills
+
+The real workflow skill closure is packaged under:
+
+```text
+blue-k-git-baton-testkit/skills/
+```
+
+Use `HANDOFF_BLUE_K_WORKFLOW_SKILL_BUNDLE.md` for the role split, review
+consensus loops, dependency recommendation loop, and relative-path setup notes.
 - plan consensus after audit;
 - code consensus after runner checkpoint;
 - docs-only consensus freeze;

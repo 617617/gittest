@@ -1,0 +1,6 @@
+interface:
+  display_name: "Pre Doc Review"
+  short_description: "Parallel feasibility review for future execution documents."
+  default_prompt: "Use $pre-doc-review to review the execution documents for a future step before implementation."
+policy:
+  allow_implicit_invocation: false
