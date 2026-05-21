@@ -532,9 +532,12 @@ manual relay role.
 - It then writes a real baton artifact
   `from-cc/<unit-id>__kickoff.md` carrying `BatonNext: <initial-driver
   state>`, commits, and pushes.
-- The other side's watcher fires on the new file. Its first lane
-  reads the kickoff as its primary input (goal text, source anchor,
-  previous-close pointer) and enters the initial state.
+- The other side picks it up — via its watcher if it has one (e.g.,
+  CC's harness Monitor tool), or via an on-demand sync skill if it
+  does not (e.g., `/<preset>-codex-sync` on a Codex CLI that has no
+  watcher equivalent). Its first lane reads the kickoff as its
+  primary input (goal text, source anchor, previous-close pointer)
+  and enters the initial state.
 - The orchestrator never emits multi-block copy-paste text. The only
   text the user ever relays is a single one-time onboarding line
   (e.g., "you are in `<preset>`, read HANDOFF.md") for a never-before-

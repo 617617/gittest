@@ -71,6 +71,32 @@ BatonNext: <next state>
 <short fields summarizing the work-repo product>
 ```
 
+### 4. Push order (cross-repo consistency)
+
+Lanes that write commits in both the work repo and the coord repo
+must push in this strict order:
+
+1. **First**, push the work repo:
+   ```bash
+   cd $(<work-repo-prefix>:)
+   git push origin <work-branch>
+   ```
+   Confirm exit 0 before continuing.
+2. **Only then**, push the coord repo:
+   ```bash
+   cd $(gittest:)
+   git push origin master
+   ```
+
+If the first push fails, do NOT push the coord repo — retry the
+work-repo push first. If the second push fails (work pushed, coord
+not), baton state has not advanced from any consumer's view; simply
+retry the coord push. The reverse order leaves a dangling
+`<work-repo-prefix>@<sha>` reference that breaks the downstream audit
+lane with `CROSS_REPO_MISSING_REF`. The standalone
+`scripts/verify_cross_repo_refs.py` walks both mailboxes + archive and
+flags any unreachable reference. See PATTERNS P22.
+
 ## Writes
 - `from-codex/<unit-id>__<step-tag>.md` (the pointer file)
 - First line `BatonNext: <STATE>`.
@@ -112,6 +138,19 @@ BatonNext: <STATE>
 
 <sections specific to this lane>
 ```
+
+## Push procedure
+
+Same shape as `/<preset>-start` Branch A (commit-before-rebase):
+
+1. `python scripts/check_baton_artifacts.py` — must PASS against the
+   working tree. On FAIL, `rm` the new file and stop.
+2. `git add` the new product file.
+3. `git commit -m "<step-tag>(<unit-id>): <brief>"`.
+4. `git pull --rebase origin master` (tree is clean now).
+5. `git push origin master`.
+
+If rebase conflicts or push is rejected, surface and stop.
 
 ## Authority
 CC-only. Codex must refuse — `<why>`.

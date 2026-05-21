@@ -46,7 +46,8 @@ of truth.** That fix is queued, not yet in.
 
 **Lesson.** Any number that humans type into prose has a probability
 of drifting. If the number matters, derive it; if it doesn't matter,
-do not write it.
+do not write it. See also AUDIT-LESSONS Lesson 4 for the broader
+'don't write counts in prose at all' principle.
 
 ---
 
@@ -267,10 +268,12 @@ git, not in chat. A chat-relayed instruction:
 plus a Step 0 in ROLES, a new (no-prior-state) -> DRAFTING_BLUEPRINT
 transition in BATON.schema, and a step-tag in the artifact checker.
 The orchestrator skill writes + commits + pushes the kickoff itself;
-the other host's watcher fires; the first lane reads the kickoff as
-its trigger. The only chat relay that remains is a single one-time
-sentence to tell a brand-new Codex session "you are in `<preset>`,
-read HANDOFF.md".
+the other host picks it up on its next watcher tick (if it has a
+live watcher, like CC's harness Monitor) or its next sync-skill
+invocation (like Codex's `/temporal-phase-codex-sync`); the first
+lane reads the kickoff as its trigger. The only chat relay that
+remains is a single one-time sentence to tell a brand-new Codex
+session "you are in `<preset>`, read HANDOFF.md".
 
 See PATTERNS P17 for the durable shape.
 

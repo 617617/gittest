@@ -132,11 +132,18 @@ commit only on your local machine — push in this strict order:
    git push origin master
    ```
 
-Worst case if your second push fails: you have an already-pushed work
-repo commit and an unpushed coord-side pointer. On next
-`/temporal-phase-codex-sync` you will see baton state has not
-advanced (no blueprint pointer in coord); simply retry the coord push.
-Pointer/SHA stays consistent.
+If the **first push fails** (work-repo push rejected — network drop,
+conflict, branch protection): do **not** push the coord repo. On
+next `/temporal-phase-codex-sync` you will see baton state still
+`DRAFTING_BLUEPRINT` (no blueprint pointer in coord); retry the
+work-repo push first, then write/push the coord pointer. Pointer/SHA
+stays consistent.
+
+Worst case if your **second push fails** (work pushed, coord push
+rejected): you have an already-pushed work repo commit and an
+unpushed coord-side pointer. On next `/temporal-phase-codex-sync`
+you will see baton state has not advanced (no blueprint pointer in
+coord); simply retry the coord push. Pointer/SHA stays consistent.
 
 Worst case if push order is reversed: the coord-side pointer is on
 `origin/master` referencing a `temporal@<sha>` that CC's `temporal:`

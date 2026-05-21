@@ -38,7 +38,10 @@ practical guards:
 - When dispatching parallel **fix-up** agents (not just audit
   agents), the file-ownership boundary is even stricter — concurrent
   edits to the same file produce stale-state errors. Pre-segment by
-  directory or by file. See PATTERNS P15.
+  directory or by file. See PATTERNS P15. Concrete example from this
+  preset's fix-up batch: one agent owned `trans/` only, the other
+  owned `workflows/temporal-phase/` + `scripts/`. Zero merge
+  conflicts.
 
 ## Lesson 3 — "We say X happens" ≠ "X actually happens"
 
@@ -77,7 +80,8 @@ detects drift the next time something changes.
 
 When you can't programmatically derive a count, **don't write the
 count in prose at all** — write "one per X" or "see <source file>
-for the list".
+for the list". See ANTI-PATTERNS A2 for the original HANDOFF
+state-count drift incident that triggered this lesson.
 
 ## Lesson 5 — Push-order discipline is the most common operational mistake
 

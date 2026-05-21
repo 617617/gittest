@@ -148,9 +148,12 @@ fall back as follows:
   rather than guessing. State the exact `git push` command being
   proposed, wait for user approval, then proceed.
 - **Cannot read `.codex/skills.json` to enumerate skills** — surface
-  this to the user as "skill registry not visible from this session;
-  please run /temporal-phase-codex-sync after restarting Codex in
-  the coord-repo working directory".
+  this to the user as "skill registry not visible from this session".
+  Recovery: open this SKILL file directly by path
+  (`workflows/temporal-phase/skills/temporal-phase-codex-sync/SKILL.md`)
+  and follow steps 1–5 manually. The slash form will start working
+  once the registry can be loaded (likely after Codex restart in the
+  correct CWD = the coord-repo root).
 
 ## See also
 `workflows/temporal-phase/HANDOFF.md` (Codex entry), `workflows/temporal-phase/BATON.schema.md`,

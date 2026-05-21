@@ -143,21 +143,25 @@ When the user supplies `<phase-id>`, `<goal>`, and (optionally)
    On collision: delete the local file, report `CHAIN_COLLISION`,
    ask the user to pick a different phase-id, and stop.
 
-6. Stage and commit:
+6. **Stage and commit.** The local commit must exist BEFORE pulling —
+   `git pull --rebase` refuses to run on a dirty working tree, so the
+   commit first / rebase second order is mandatory.
    ```bash
    git add workflows/temporal-phase/_coord/from-cc/<phase-id>__kickoff.md
    git commit -m "kickoff(<phase-id>): start Phase per temporal-phase workflow"
    ```
 
-7. **Pull --rebase, then push.** Absorb any concurrent pushes before
-   sending yours:
+7. **Pull --rebase, then push.** Now the tree is clean (commit landed in
+   step 6); `git pull --rebase` can replay your commit on top of
+   anything that arrived on `origin/master` while you were working:
    ```bash
    git pull --rebase origin master
    git push origin master
    ```
    If the rebase has conflicts, surface them and stop — do not resolve
    silently. If the push is rejected by some other rule (hook, branch
-   protection), surface and stop.
+   protection), surface and stop; the local commit is intact and the
+   user can investigate.
 
 **Step A3 — tell the user what happens next.**
 
@@ -237,19 +241,31 @@ to `confirm` if absent or malformed).
 **Helper — phase-id collision check (used multiple times below):**
 
 ```bash
+# <candidate-id> is the NextPhaseId we are about to use.
+# <closed-id> is the phase that just closed (if any) -- pass empty string if none.
 ALL_IDS=$( {
   ls workflows/temporal-phase/_coord/from-cc/ workflows/temporal-phase/_coord/from-codex/ 2>/dev/null \
     | grep -oE '^phase-[0-9]+';
   ls workflows/temporal-phase/_coord/archive/ 2>/dev/null \
     | grep -oE '^phase-[0-9]+';
-} | sort -u )
-echo "$ALL_IDS" | grep -qx "<candidate-id>"   # exit 0 = collision
+} | sort -u | grep -vx "<closed-id>" )   # exclude the just-closed phase from the live-set (it is about to be archived)
+echo "$ALL_IDS" | grep -qx "<candidate-id>"   # exit 0 = collision against some OTHER phase
+
+# Note: if <candidate-id> == <closed-id>, the user is reusing the just-closed id.
+# That is its own kind of collision -- reuse of a closed id should also be rejected.
+# Add the explicit reuse check separately:
+[ "<candidate-id>" = "<closed-id>" ] && echo "CHAIN_COLLISION: <candidate-id> equals just-closed phase-id (reuse not allowed)"
 ```
 
 Note: live mailboxes still contain the closing Phase's artifacts at
-this point — that is expected, and the closing phase-id will appear in
-`ALL_IDS`. Exclude `<closed-id>` from collision matching when
-validating `<NextPhaseId>`.
+this point — that is expected. The helper now excludes `<closed-id>`
+from `ALL_IDS` automatically (via `grep -vx "<closed-id>"`), so the
+main check only flags collisions against *other* phases. The separate
+reuse check immediately after catches the case where `<NextPhaseId>`
+happens to equal `<closed-id>` — reuse of a just-closed phase-id is
+itself a collision and must be rejected. Callers should treat either
+signal (helper exit 0, or the reuse-check echo line) as
+`CHAIN_COLLISION`.
 
 **Decision tree — apply in order, stopping at the first match:**
 
@@ -262,10 +278,15 @@ validating `<NextPhaseId>`.
      given). Skip to step 5.
    - `NextPhaseId:` matches `^phase-\d+$` fails → report
      `CHAIN_INVALID_ID`. Skip to step 5.
-   - **Run the helper above** with `<NextPhaseId>` (excluding
-     `<closed-id>`). If it returns collision → report
-     `CHAIN_COLLISION: <NextPhaseId> already exists as
-     <live|archived>`. **Do not** auto-advance. Skip to step 5.
+   - **Run the helper above** with `<candidate-id>=<NextPhaseId>` and
+     `<closed-id>` set to the just-closed phase. The helper excludes
+     `<closed-id>` from the live-set automatically and also runs the
+     explicit reuse check. If the main check returns collision (exit
+     0) → report `CHAIN_COLLISION: <NextPhaseId> already exists as
+     <live|archived>`. If the reuse check fires (echo line printed) →
+     report `CHAIN_COLLISION: <NextPhaseId> equals just-closed
+     phase-id (reuse not allowed)`. In either case, **do not**
+     auto-advance. Skip to step 5.
 
 2. **`ChainMode = off`** → report the close and the proposed
    `NextPhasePlan` for the user's information. Take no further action.
@@ -292,6 +313,12 @@ validating `<NextPhaseId>`.
    archive + kickoff changes are wrapped in **one atomic commit** so
    that origin/master never sees a half-state.
 
+   The order — **commit first, rebase second** — is mandatory:
+   `git pull --rebase` refuses to run on a dirty working tree, and our
+   working tree is dirty after `archive_phase.py` moves files +
+   the new kickoff is written. We must commit the combined change
+   first, THEN pull-rebase against origin.
+
    1. **Move locally.** Run `python scripts/archive_phase.py <closed-id>`.
       This moves files from `from-cc/`+`from-codex/` to
       `_coord/archive/<closed-id>/`. It does NOT commit. Surface any
@@ -305,25 +332,28 @@ validating `<NextPhaseId>`.
    3. **Check the combined working tree.** Run
       `python scripts/check_baton_artifacts.py`. It must see exactly
       the new kickoff in live mailboxes (archive is ignored). **If it
-      FAILs**: undo locally with
+      FAILs**: undo locally — `archive_phase.py` uses `shutil.move`, so
+      `git reset --hard HEAD` restores the *source* files but leaves
+      the untracked archive copies and untracked kickoff in place. You
+      need all three steps:
       ```bash
       git reset --hard HEAD
-      rm -f workflows/temporal-phase/_coord/from-cc/<NextPhaseId>__kickoff.md
+      rm -rf workflows/temporal-phase/_coord/archive/<closed-id>/
+      rm -f  workflows/temporal-phase/_coord/from-cc/<NextPhaseId>__kickoff.md
       ```
-      (the `git reset --hard` restores the tracked files that
-      archive_phase.py moved; the `rm` removes the still-untracked new
-      kickoff.) Surface the error and stop.
-   4. **Pull --rebase.** Absorb any concurrent pushes that landed
-      during the work above:
-      ```bash
-      git pull --rebase origin master
-      ```
-      If conflicts, surface and stop.
-   5. **One atomic commit.** Stage archive + kickoff together:
+      Surface the error and stop.
+   4. **One atomic commit.** Stage archive + kickoff together:
       ```bash
       git add -A workflows/temporal-phase/_coord/
       git commit -m "chain: archive <closed-id> + kickoff <NextPhaseId>"
       ```
+   5. **Pull --rebase.** Tree is clean now (everything is in the
+      commit from step 4); rebase replays your commit on top of any
+      concurrent pushes:
+      ```bash
+      git pull --rebase origin master
+      ```
+      If conflicts, surface and stop — do not resolve silently.
    6. **Push.**
       ```bash
       git push origin master
@@ -344,14 +374,13 @@ validating `<NextPhaseId>`.
    > Phase `<closed-id>` is closed and the chain is paused. Archive
    > its artifacts to `_coord/archive/<closed-id>/`? [yes / no]
 
-   On `yes`: run `archive_phase.py`, then check before commit, then
-   pull --rebase, then commit + push:
+   On `yes`, same commit-before-rebase order applies:
    ```bash
    python scripts/archive_phase.py <closed-id>
-   python scripts/check_baton_artifacts.py   # FAIL -> git reset --hard HEAD; stop
-   git pull --rebase origin master
+   python scripts/check_baton_artifacts.py   # FAIL -> see step 4.3 cleanup; stop
    git add -A workflows/temporal-phase/_coord/
    git commit -m "archive: <closed-id> (<terminal-state>)"
+   git pull --rebase origin master            # tree clean now; rebase if needed
    git push origin master
    ```
 

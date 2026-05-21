@@ -41,6 +41,7 @@ trans/
   PATTERNS.md        # reusable design patterns with rationale
   ANTI-PATTERNS.md   # what we tried that did not work + why
   CHECKLIST.md       # quick pre-flight + ship checklist
+  AUDIT-LESSONS.md  # meta-lessons from audit cycles
   templates/         # copy-and-adapt file skeletons
     CHARTER.template.md
     ROLES.template.md

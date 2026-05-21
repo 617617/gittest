@@ -1,8 +1,9 @@
 # PLAYBOOK — Converting a workflow document into a git-baton preset
 
-End-to-end recipe distilled from the temporal-phase conversion. Seven
-steps; each step lists the **input**, **output**, and the **gate** that
-proves the step is done.
+Eight-step end-to-end recipe (Step 0–8) plus an after-landing
+checklist, distilled from the temporal-phase conversion. Each step
+lists the **input**, **output**, and the **gate** that proves the
+step is done.
 
 ## Step 0 — Confirm the workflow fits
 

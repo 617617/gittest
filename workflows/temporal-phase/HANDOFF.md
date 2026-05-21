@@ -226,8 +226,14 @@ pending):
 6. Follow the lane SKILL's "Push order" section — push work repo
    FIRST, then push coord repo.
 
-CC's monitor fires on the new file in `_coord/from-codex/` and the
-audit lane starts.
+On CC's side (Host A), the persistent Monitor armed by
+`/temporal-phase-watch` polls `origin/master` and emits a
+`NEW_FROM_CODEX` event when your push lands; CC then runs the audit
+lane. (This is a real CC-harness primitive — `Monitor` tool — not a
+mythical autonomy. Codex on Host B has no equivalent, which is why
+your side is **sync-driven**, not watcher-driven: you discover CC's
+pushes the next time you run `/temporal-phase-codex-sync`, not
+automatically.)
 
 **Do not** start a Phase without seeing the kickoff. If the user asks
 in chat to "start a Phase" without a kickoff in `from-cc/`, redirect

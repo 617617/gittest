@@ -42,6 +42,22 @@ before shipping.
       skill (Generator, Runner, etc.), naming the work-repo skill.
 - [ ] **`Codex must refuse`** appears in `agents/openai.yaml`
       `default_prompt` for every CC-only lane.
+- [ ] ROLES.md has a Step 0 — kickoff (CC writes
+      from-cc/<unit-id>__kickoff.md with BatonNext:
+      <initial-driver-state>).
+- [ ] BATON.schema.md has a (no-prior-state) -> <initial-driver-state>
+      transition driven by the kickoff.
+- [ ] Cross-repo lanes (those that touch both work repo and coord
+      repo) carry a "## Push order" section: work-repo push first,
+      coord-repo push second.
+- [ ] CC-only lanes carry a "## Push procedure" section: write ->
+      check -> commit -> pull --rebase -> push (commit-before-rebase
+      order).
+
+### `workflows/_active.md`
+
+- [ ] ChainMode: line set to one of {auto, confirm, off} before
+      launching the first unit (default: confirm).
 
 ### `.codex/skills.json`
 
@@ -56,6 +72,21 @@ before shipping.
       examples. **Does not read `_active.md`.**
 - [ ] `<preset>-start/SKILL.md` — orchestrator with Branch A / B / C
       logic.
+- [ ] `<preset>-watch/SKILL.md` present.
+- [ ] `<preset>-start/SKILL.md` present, with Branch A
+      (kickoff-artifact, no copy-paste) and Branch C (chain-mode
+      decision tree).
+
+### Non-orchestrator side
+
+- [ ] `<preset>-<other>-sync` registered (operational, codexLane:
+      true if Codex-side) — provides the catch-up path when the
+      other side is offline.
+
+### Cross-cutting
+
+- [ ] `issue/` tracker exists at repo root with README + open/ +
+      closed/ subdirs.
 
 ### `scripts/`
 
@@ -63,6 +94,13 @@ before shipping.
 - [ ] `check_baton_artifacts.py` — runtime artifact validator (this
       can be a shared script across presets if you generalize, or a
       per-preset script if you keep it scoped).
+- [ ] `scripts/verify_<preset>_skills.py` PASSes.
+- [ ] `scripts/check_baton_artifacts.py` PASSes (treats the new
+      preset's mailbox conventions; may need preset-specific
+      step-tag additions).
+- [ ] `scripts/verify_cross_repo_refs.py` runs and PASSes on hosts
+      with a work-repo clone (manual spot-check, not part of default
+      flow).
 
 ### `.claude/settings.json`
 
