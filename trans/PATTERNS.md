@@ -311,6 +311,97 @@ for "Agent A", "Agent B", "Agent C", "Agent D").
 
 ---
 
+## P21 — Lightweight git-tracked friction tracker
+
+**Problem.** While running a baton workflow, an AI notices the
+protocol is wrong, ambiguous, or the tooling fights it. Stopping
+mid-Phase to triage corrupts focus; emitting only chat complaints
+loses the friction forever. A hosted issue tracker (Linear, GitHub
+issues) is too heavy for an AI to drive mid-flow.
+
+**Shape.** A plain-text directory `issue/` with two subfolders:
+
+```text
+issue/
+  README.md                       # template + conventions
+  open/<YYYY-MM-DD>__<slug>.md
+  closed/<YYYY-MM-DD>__<slug>.md
+```
+
+Conventions:
+- AIs file an issue at the moment of friction, push, and continue.
+  The baton does NOT pause on issue filing.
+- Issue file template: Reporter, Workflow, Severity (blocker / major
+  / minor / nit), Context, What felt wrong, Suggested fix, Workaround.
+- Closing an issue is a `git mv open/ -> closed/` plus a `## Resolution`
+  section citing the fix commits.
+- HANDOFF documents on each side instruct the AI to file friction
+  without blocking the baton.
+
+**Why this works.** The baton workflows already have a "git is the
+only truth source" stance. Friction is workflow truth that needs to
+live in git, too. By making the format trivial (one markdown file)
+and the protocol explicit (no triage gate during filing), AIs are
+willing to actually file instead of letting friction silently
+accumulate.
+
+**Reference.**
+- `issue/README.md` — template + conventions.
+- `workflows/temporal-phase/HANDOFF.md` §7.1 — instructions for
+  Codex.
+- `.claude/skills/temporal-phase-watch/SKILL.md` and
+  `temporal-phase-start/SKILL.md` — optionally report open-issue count
+  in their status blocks (advisory; does not block).
+
+---
+
+## P20 — Chained units via NextPhasePlan + ChainMode
+
+**Problem.** The user's stated goal: "one Phase as one closed-loop
+invocation; when complete, automatically proceed to the next Phase per
+the blueprint." Without explicit infrastructure, every Phase-to-Phase
+transition forces the user back into the loop to choose phase-id +
+goal, breaking the "set it and forget it" promise of chained roadmaps.
+
+**Shape.**
+- Closing lane SKILL gets a `NextPhasePlan:` block in its product
+  template with fields: `NextPhaseId`, `NextPhaseGoal`,
+  `NextSourceAnchor`, `StopReason` (mutually-exclusive with
+  `NextPhaseId`).
+- `workflows/_active.md` gains a `ChainMode:` line with three values:
+  - `auto` — zero-touch advance on every COMPLETED + populated plan.
+  - `confirm` — one-click confirmation prompt (recommended default).
+  - `off` — never auto-advance.
+- Watcher reacts to `NEW_FROM_CODEX: <phase-id>__close.md` by running
+  the orchestrator's "Branch C" logic; the orchestrator centralises
+  the chain decision tree.
+- Hard-stop safety overrides apply regardless of `ChainMode`:
+  - BLOCKED close → stop chain.
+  - Missing / malformed `NextPhasePlan` → chain ended naturally.
+  - `NextPhaseId` collision with live or archived id → stop with loud
+    error.
+- Verifier validates `ChainMode:` value (only `auto`/`confirm`/`off`
+  allowed if the line is present).
+
+**Why centralise in the orchestrator.** The chain decision is the
+same whether the user invoked `/temporal-phase-start` manually or the
+watcher detected a close.md event. Both paths funnel into the same
+Branch C decision tree, so the rules live in one place.
+
+**Reference.**
+- Close template: `workflows/temporal-phase/skills/temporal-phase-close/SKILL.md`
+  §"Product structure" + §"NextPhasePlan — when to include / when to omit".
+- ChainMode field: `workflows/_active.md`,
+  `workflows/temporal-phase/CHARTER.md` §"Chain mode and auto-advance".
+- Orchestrator decision tree:
+  `.claude/skills/temporal-phase-start/SKILL.md` Branch C.
+- Watcher event hook:
+  `.claude/skills/temporal-phase-watch/SKILL.md` §"Event handling".
+- Verifier validation: `scripts/verify_temporal_phase_skills.py`
+  ChainMode regex block.
+
+---
+
 ## P18 — On-demand sync skill on the non-orchestrator side
 
 **Problem.** CC has a watcher + a one-command orchestrator. The other

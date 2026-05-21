@@ -194,32 +194,91 @@ workflows/temporal-phase/_coord/from-codex/. Commit + push.
 
 #### Branch C — Phase just closed (last artifact is `close.md`)
 
-Report COMPLETED vs BLOCKED_POSTEXEC from the close.md's `BatonNext:`
-line. Show its CompletionCriteria summary.
+Read the close.md to extract:
 
-**Offer to archive the closed Phase's artifacts.** Ask the user:
+- `BatonNext:` — terminal state (`COMPLETED` or `BLOCKED_POSTEXEC`).
+- `CompletionCriteria:` — summary (already done by the close lane).
+- `NextPhasePlan:` block (may be missing / empty).
 
-> Phase `<phase-id>` is closed (`<terminal-state>`). Archive its
-> artifacts to `_coord/archive/<phase-id>/` so the mailboxes stay
-> focused on the next Phase? (recommended, keeps git history intact)
-> [yes / no / not yet]
+Report the close to the user (terminal state + a brief
+CompletionCriteria summary).
 
-If the user says yes:
+Then read `workflows/_active.md` to find the `ChainMode:` line (default
+to `confirm` if absent or malformed).
 
-1. Run `python scripts/archive_phase.py <phase-id>`. Surface any FAIL.
-2. On PASS, stage + commit + push:
+**Decision tree — apply in order, stopping at the first match:**
 
-   ```bash
-   git add -A workflows/temporal-phase/_coord/
-   git commit -m "archive: <phase-id> (<terminal-state>)"
-   git push origin master
-   ```
+1. **Hard stop conditions** (regardless of `ChainMode`):
+   - `BatonNext:` is `BLOCKED_*` → tell the user the chain stops here,
+     surface `NextPhasePlan.StopReason:` if present, suggest manual
+     triage. Skip to step 5 (archive).
+   - `NextPhasePlan:` block is missing or has no `NextPhaseId:` → tell
+     the user the chain ended naturally (cite `StopReason:` if
+     given). Skip to step 5.
+   - `NextPhaseId:` collides with any live mailbox phase-id or any
+     archived phase-id → report a `CHAIN_COLLISION` error with the
+     conflicting ids. **Do not** auto-advance. Skip to step 5.
 
-3. Re-run `python scripts/check_baton_artifacts.py` to confirm
-   mailboxes are clean.
+2. **`ChainMode = off`** → report the close and the proposed
+   `NextPhasePlan` for the user's information. Take no further action.
+   Skip to step 5 only if the user explicitly asks to archive.
 
-Then ask the user whether they want to start the next Phase
-(re-enter Branch A) or stop.
+3. **`ChainMode = confirm`** (default) → present the proposed plan and
+   ask:
+
+   > Phase `<closed-id>` is `<state>`. The close proposes
+   > `<NextPhaseId>` with goal "`<NextPhaseGoal>`" (anchor:
+   > `<NextSourceAnchor>`). Advance? [yes / edit / no]
+
+   - `yes` → proceed with auto-advance (step 4).
+   - `edit` → re-prompt the user for phase-id / goal / source-anchor
+     (same prompts as Branch A step A1), then proceed with
+     auto-advance using the edited values.
+   - `no` → take no further action; ask about archiving (step 5).
+
+4. **Auto-advance** (`ChainMode = auto`, or `confirm` with user `yes`,
+   or `confirm` with `edit` after re-prompt):
+   1. Run `python scripts/archive_phase.py <closed-id>`; surface any
+      FAIL.
+   2. Stage + commit + push the archive:
+      ```bash
+      git add -A workflows/temporal-phase/_coord/
+      git commit -m "archive: <closed-id> (<terminal-state>)"
+      git push origin master
+      ```
+   3. Re-run `python scripts/check_baton_artifacts.py` to confirm
+      clean mailboxes.
+   4. Write the next kickoff `from-cc/<NextPhaseId>__kickoff.md`
+      following the same format as Branch A step A2, populating from
+      `NextPhasePlan` (or the user-edited values) and adding
+      `PreviousPhaseClose: gittest:workflows/temporal-phase/_coord/archive/<closed-id>/from-codex/<closed-id>__close.md`.
+   5. Stage + commit + push the kickoff:
+      ```bash
+      git add workflows/temporal-phase/_coord/from-cc/<NextPhaseId>__kickoff.md
+      git commit -m "kickoff(<NextPhaseId>): chained from <closed-id>"
+      git push origin master
+      ```
+   6. Run `check_baton_artifacts.py` once more to confirm the new
+      open Phase is well-formed.
+   7. Report:
+      ```text
+      Chain advanced: <closed-id> archived, <NextPhaseId> kicked off.
+        ChainMode:        <auto | confirm-confirmed | confirm-edited>
+        NewState:         DRAFTING_BLUEPRINT (Codex's turn)
+      ```
+
+5. **Archive prompt for non-auto paths** (`off`, `no`, or hard-stop):
+   Ask:
+
+   > Phase `<closed-id>` is closed and the chain is paused. Archive
+   > its artifacts to `_coord/archive/<closed-id>/`? [yes / no]
+
+   On `yes`: run archive_phase.py + commit + push (same steps as 4.1
+   through 4.3), then stop.
+
+In all branches, end with a clear summary of what happened and what
+the user can do next (resume the chain by editing `ChainMode`, or
+start a manual Phase via Branch A).
 
 ### 5. Final summary
 

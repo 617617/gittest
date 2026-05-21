@@ -123,6 +123,22 @@ temporal-phase-watch status:
   Monitor (from-codex):      <already-running / newly-started / failed>
 ```
 
+## Event handling — what to do when the Monitor fires
+
+The persistent Monitor armed in step 5 emits lines of the form
+`NEW_FROM_CODEX: <filename>` whenever a new artifact lands. CC reacts
+per the filename's step-tag:
+
+| Step-tag | Reaction |
+|----------|----------|
+| `blueprint`, `pre-audit-codex-r<N>`, `postexec-subagent-review`, `postexec-synthesize`, `postexec-fix`, `second-audit-codex`, `second-audit-fix` | Process per the BATON state machine — read the artifact, look up the next lane in HANDOFF §3.1, run that lane. |
+| `second-audit-decision` | Read; advance per the decision (YES/NO). |
+| `execution-report` | Process per the state machine (POSTEXEC_SUBAGENT_REVIEW is Codex's turn — CC waits). |
+| **`close`** | **Run `/temporal-phase-start` Branch C logic.** Read `workflows/_active.md` `ChainMode:`, read the close.md `NextPhasePlan:` block, then apply the Branch C decision tree (auto-advance / confirm / off / hard-stop). This is how Phase chaining actually fires: the Monitor's close.md event triggers the chain decision. |
+
+If you are uncertain what reaction applies, invoke
+`/temporal-phase-start` — it consolidates all the diagnostic logic.
+
 ## What this skill does NOT do
 
 - It does not write any baton artifact (blueprint / audit / etc.) — those

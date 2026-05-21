@@ -172,10 +172,23 @@ def main() -> int:
         if marker not in paths_text:
             fail(f"PATHS.md missing required marker: {marker}")
 
-    # workflows/_active.md is informational only (does not gate this preset).
-    # Multiple workflows can be enabled in parallel; the presence of this
-    # preset directory and its registered skills is the actual enablement
-    # signal.
+    # workflows/_active.md carries informational PrimaryFocus + the
+    # `ChainMode:` switch consumed by Phase chaining. Validate ChainMode
+    # is well-formed when present; fall back to "confirm" if absent.
+    active_path = REPO_ROOT / "workflows/_active.md"
+    if not active_path.exists():
+        fail("missing workflows/_active.md")
+    active_text = read_text(active_path)
+    chain_mode_match = re.search(
+        r"^ChainMode:\s*(auto|confirm|off)\s*$",
+        active_text,
+        flags=re.MULTILINE,
+    )
+    if "ChainMode:" in active_text and not chain_mode_match:
+        fail(
+            "workflows/_active.md has a ChainMode: line but value is not "
+            "one of {auto, confirm, off}"
+        )
 
     # HANDOFF.md §3.1 state -> lane table must cover every Codex lane
     # exactly once, with the right (state, lane) pairing.

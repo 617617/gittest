@@ -217,6 +217,21 @@ in chat to "start a Phase" without a kickoff in `from-cc/`, redirect
 them to run `/temporal-phase-start` on the CC side — that is the only
 sanctioned entry point.
 
+## 6.1 Closing a Phase — feed the chain
+
+When you write `<phase-id>__close.md`, include a `NextPhasePlan:`
+block describing the next Phase (`NextPhaseId`, `NextPhaseGoal`,
+optionally `NextSourceAnchor`). See
+`workflows/temporal-phase/skills/temporal-phase-close/SKILL.md`
+§"NextPhasePlan" for the exact rules. This block is what CC's
+`ChainMode` (in `workflows/_active.md`) reads to decide whether to
+auto-advance, ask for confirmation, or stop.
+
+If this is the last Phase of the roadmap or you cannot recommend a
+next Phase, **omit `NextPhaseId:`** and fill `StopReason:` so CC
+understands the chain has ended deliberately. A `BLOCKED_*` close
+always stops the chain regardless.
+
 ## 7. Hard rules
 
 - **No scope creep.** Execution stays strictly inside `AllowedFiles:`.
@@ -236,6 +251,22 @@ sanctioned entry point.
   final disposition is yours.
 - **Isolation.** Do not read or write anything under
   `blue-k-git-baton-testkit/`.
+
+## 7.1 Filing friction / bugs
+
+If anything in this workflow feels wrong while you are mid-Phase
+(protocol contradiction, lane SKILL underspecified, tooling fights
+you, ambiguous instruction), **file an issue and keep going** — do
+not block the baton on triage:
+
+1. Create `issue/open/<YYYY-MM-DD>__<short-slug>.md` per the template
+   in `issue/README.md`.
+2. Commit + push with message `issue(temporal-phase): <one-line>`.
+3. Resume the current lane.
+
+The next reviewer (CC or human) sweeps `issue/open/` and decides
+whether to fix, accept, or escalate. Do not let friction silently
+accumulate inside your own context.
 
 ## 8. Relationship to the testkit
 

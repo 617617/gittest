@@ -50,13 +50,42 @@ CompletionCriteria:
 
 ResidualRisks:
   - <residual risk + follow-up ownership (next Phase / separate ticket / accepted)>
-NextPhaseSuggestion: ...
+
+NextPhasePlan:
+  NextPhaseId:       <phase-NN (the next phase-id you propose) | omit-if-chain-stops>
+  NextPhaseGoal:     <one or two sentences describing the next Phase's intent>
+  NextSourceAnchor:  <optional pointer into the source workflow doc | N/A>
+  StopReason:        <required only if NextPhaseId is omitted; e.g. "roadmap complete" / "blocking risk needs human triage">
 ```
 
 `CC-07` and `CC-08` may be `N/A` when the corresponding step was
 bypassed (Adopted set was empty for `CC-07`; second-audit-decision was
 NO for `CC-08`). When `N/A`, cite the synthesis / decision file that
 justifies the bypass.
+
+## NextPhasePlan — when to include / when to omit
+
+The `NextPhasePlan` block is the **chain-mode hand-off** to the next
+Phase. `temporal-phase-start` on the CC side parses it after the close
+lands and decides whether to auto-advance, prompt for confirmation, or
+do nothing, per `workflows/_active.md` `ChainMode:` (see CHARTER
+§"Chain mode and auto-advance"). Rules:
+
+- **`BatonNext: COMPLETED`** — `NextPhasePlan` is **optional**:
+  - Include `NextPhaseId` + `NextPhaseGoal` + (optionally)
+    `NextSourceAnchor` when there is a sensible next Phase per the
+    blueprint / source-doc roadmap.
+  - Omit `NextPhaseId` (and fill `StopReason:`) when this is the last
+    Phase or the next move requires human design (e.g., the source-doc
+    roadmap ended).
+- **`BatonNext: BLOCKED_POSTEXEC`** — `NextPhasePlan` **must omit
+  `NextPhaseId`** and include `StopReason: blocked`. A blocked Phase
+  never auto-advances.
+
+`NextPhaseId` must match `^phase-\d+$` and **must not** collide with
+any phase-id that already has artifacts in the live mailboxes or
+archive. The chain logic and `check_baton_artifacts.py` enforce
+this.
 
 ## Authority
 Codex-only.

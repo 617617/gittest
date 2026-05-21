@@ -82,6 +82,32 @@ a stable ID (`CC-NN`); `temporal-phase-close/SKILL.md` and
   runs this checker on every session boot, so violations surface
   immediately.
 
+## Chain mode and auto-advance
+
+When a Phase closes (`<phase-id>__close.md` with terminal `BatonNext:`),
+Codex includes a `NextPhasePlan:` block in the close.md that names the
+proposed next phase-id, its goal, and an optional source-doc anchor
+(see the `temporal-phase-close` SKILL). CC then advances or stops based
+on `workflows/_active.md` `ChainMode:`:
+
+| `ChainMode` | What CC does after a `COMPLETED` close with a populated `NextPhasePlan` |
+|-------------|---------------------------------------------------------------------------|
+| `auto`      | Auto-archive, auto-write next kickoff, commit, push. Zero confirmation. |
+| `confirm`   | Report the close + the proposed next plan; ask the user (yes / edit / no); on yes, run the same actions. |
+| `off`       | Report the close; do nothing more. User must invoke `/temporal-phase-start` explicitly. |
+
+`confirm` is the default and the recommended setting until a chain is
+well-rehearsed. `auto` enables true hands-off Phase chaining when the
+roadmap is stable; flip to `off` at any time to pause.
+
+Safety overrides apply **regardless** of `ChainMode`:
+
+- `BatonNext: BLOCKED_*` close always stops the chain.
+- Missing or malformed `NextPhasePlan:` always stops the chain (chain
+  ended naturally).
+- `NextPhaseId:` colliding with any existing live or archived phase-id
+  always stops the chain with an explicit error.
+
 ## Archival policy
 
 Closed Phases (`COMPLETED` or `BLOCKED_*`) accumulate artifacts. Letting
