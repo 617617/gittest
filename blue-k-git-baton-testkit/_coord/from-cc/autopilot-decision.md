@@ -1,8 +1,18 @@
 Autopilot: enabled
-ContinueWithoutReview: yes
+ContinueWithoutReview: no
 Mode: B
 Scope: testkit v0.10 walk-through only — does NOT apply to real Blue-K work
 ApprovedAt: 2026-05-21T05:45:00Z
+AmendedAt: 2026-05-21T06:00:00Z
+AmendmentReason: user flagged that pushing the next scenario before
+  receiving CC review defeats the peer-review value of the dual-AI test.
+  Switching to per-scenario gating: Codex must wait for
+  `_coord/from-cc/review/<scenario>.md` to land before pushing the next
+  result. Already-pushed results (ready_codex_main, ready_cc_planner,
+  role_mismatch, audit_report_blocks_runner, atomic_unavailable,
+  active_lease_other_holder, stale_lease_resume_original,
+  stale_lease_takeover_required) stay valid — CC will review them
+  individually; Codex does not need to re-run them.
 
 ScenarioQueue:
 - ready_codex_main
