@@ -155,6 +155,30 @@ Before shipping, spawn 3–4 parallel subagents along these angles
 
 Address every flagged item or queue it explicitly as a follow-up.
 
+## Refactor audit (only if this batch includes a SKILL.md refactor)
+
+When this batch includes splitting one or more `SKILL.md` into a thin
+dispatcher + `references/` subdirectory (per PATTERNS P23 progressive
+disclosure), the compression step easily drops load-bearing content
+that read as "commentary". You MUST run a sentence-level diff audit
+of OLD vs NEW BEFORE the ship steps below.
+
+- [ ] For each refactored skill, run a sentence-level diff:
+      `git show <pre-refactor>:<path>` vs the new `SKILL.md` plus
+      every `references/*.md`. Walk every sentence / bullet / code
+      block / table row of OLD; verify each is PRESENT or knowingly
+      REWORDED in NEW. Anything truly DROPPED → restore.
+- [ ] For large skills (>200 lines OLD), spawn a subagent to do the
+      diff in parallel. Each subagent owns one skill.
+- [ ] Pay special attention to the "never compress" categories from
+      PATTERNS P23 Caveat 2: expected output strings, literal
+      commands with non-trivial idioms, directive sub-clauses,
+      operational context hints.
+- [ ] Confirm each refactored `SKILL.md` carries a `## Required
+      reading (load these before acting)` section near the top
+      naming each `references/*.md` it depends on (PATTERNS P23
+      Caveat 3).
+
 ## Ship
 
 - [ ] Single commit with a descriptive title and body summarizing what

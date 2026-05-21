@@ -11,6 +11,17 @@ boots (or whenever the user wants a "where are we" status from the
 Codex side). It does not produce a baton artifact; it only inspects
 mailbox state and tells Codex which lane to enter next.
 
+## Required reading (load these before acting)
+
+This skill's load-bearing detail is split across `references/`:
+
+- `references/sort-tiebreak.md` — most-recent-artifact rules and
+  the "first artifact for a Phase ever" / kickoff special case. Read
+  **before** Step 3 (diagnose what is pending).
+- `references/fallback-modes.md` — 4 fallback scenarios for degraded
+  Codex CLI environments. Read whenever a step in this skill is
+  blocked or behaves unexpectedly.
+
 ## Trigger
 - Codex CLI session start on Host B.
 - User asks Codex "sync" / "check mailbox" / "what's next".

@@ -512,6 +512,41 @@ Lane SKILLs that are already short (50-100 lines, single-concern)
 do not need refactoring. The pattern triggers on size + concern
 count.
 
+**Caveats (learned from this preset's round-5 refactor):**
+
+1. **Refactor MUST be followed by a sentence-level diff audit.** The
+   compression step easily drops "feels-like-commentary" content that
+   turns out to be load-bearing (expected verifier output strings,
+   contextual hints about offline tolerance, directive sub-clauses
+   like "Use field X to find Y", literal copy-paste commands the
+   reader would otherwise have to reconstruct). On this preset we
+   dropped 6 such items and only caught them when the user explicitly
+   asked. Procedure: `git show <pre-refactor>:<path>` vs the new
+   `SKILL.md + references/*` concatenated; walk every sentence /
+   bullet / code block / table row of OLD and verify presence in
+   NEW. Spawn a subagent if the skill is large. See CHECKLIST.md
+   "Refactor audit" gate.
+
+2. **"Never compress" categories.** Treat these 4 categories as
+   keep-verbatim during any refactor:
+   - Expected output strings (`PASS: X verified`, `FAIL: Y`,
+     `NEW_FROM_CODEX:`, etc.) — AI uses them as anchors.
+   - Literal commands with non-trivial idioms (`git ls-tree --name-only
+     origin/master:... | grep -v '^.gitkeep$' | sort`, HEREDOC, pipe
+     stages). Prose description loses copy-paste value.
+   - Directive sub-clauses ("Use X to do Y"). A field being listed
+     is not the same as the AI being told what to do with it.
+   - Operational context hints ("X doesn't need to stay online",
+     "to resume, edit Y") — looks like commentary, defines edge
+     cases.
+
+3. **Pointers in SKILL.md must be enforced as "required reading"
+   before action**, not scattered hints. The standard form is a
+   `## Required reading (load these before acting)` section near the
+   top of SKILL.md that names each `references/*.md` file the AI
+   must load before doing meaningful work. Scattered "see references/
+   X.md" mentions buried in step text are easier to ignore.
+
 ---
 
 ## P18 — On-demand sync skill on the non-orchestrator side

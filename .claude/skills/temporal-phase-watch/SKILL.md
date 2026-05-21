@@ -9,6 +9,19 @@ Set up CC's side of the **temporal-phase** workflow preset. Each step
 is idempotent; safe to run alongside other workflow watchers (e.g.,
 `bk-watch`) since each only touches its own workflow's coord directory.
 
+## Required reading (load these before acting)
+
+This skill's load-bearing detail is split across `references/`. Read
+each as you reach the section that points at it:
+
+- `references/event-handling.md` — Monitor step-tag → reaction table.
+  Read **before** processing any `NEW_FROM_CODEX:` event the Monitor
+  emits.
+- `references/monitor-command.md` — exact bash command + shell
+  requirement. Read **before** arming the Monitor in step 5.
+- `references/failure-modes.md` — symptom → behavior table. Read
+  whenever any step in this skill fails.
+
 ## When to invoke
 
 - Start of any CC session participating in the temporal-phase workflow.

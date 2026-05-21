@@ -5,6 +5,21 @@ description: Codex creates the Phase execution blueprint. Trigger DRAFTING_BLUEP
 
 # temporal-phase / blueprint (Codex lane)
 
+## Required reading (load these before acting)
+
+This skill's load-bearing detail is split across `references/`. The
+SKILL.md is a thin pointer; before you can draft a blueprint or push
+correctly you MUST load both:
+
+- `references/tools-generator.md` — full Generator delegation
+  contract (allowed scope, package shape, status enum, required
+  inputs, mandatory multi-agent review, coord-side product format).
+  Read **before** opening this lane.
+- `references/push-order.md` — cross-repo push order, both
+  first-push-failure and second-push-failure recovery, and the
+  `CROSS_REPO_MISSING_REF` / `verify_cross_repo_refs.py` diagnostic.
+  Read **before** pushing.
+
 ## Trigger
 - Baton state: `DRAFTING_BLUEPRINT`, entered when a new
   `from-cc/<phase-id>__kickoff.md` lands carrying

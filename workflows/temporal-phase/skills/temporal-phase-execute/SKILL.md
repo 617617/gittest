@@ -5,6 +5,23 @@ description: Codex executes the Phase per the accepted blueprint. Trigger EXECUT
 
 # temporal-phase / execute (Codex lane)
 
+## Required reading (load these before acting)
+
+This skill's load-bearing detail is split across `references/`. The
+SKILL.md is a thin pointer; before executing or pushing, load all
+three:
+
+- `references/tools-runner.md` — full Runner delegation contract
+  (strict-serial three-layer rule, pending exactly-one, package-local
+  reads, post-execution archive, coord-side product, relationship to
+  subsequent baton lanes). Read **before** opening this lane.
+- `references/push-order.md` — cross-repo push order + both
+  recovery branches + `CROSS_REPO_MISSING_REF`. Read **before**
+  pushing.
+- `references/crash-recovery.md` — resume after CLI kill mid-execution
+  (4-step procedure + "do not invent state" warning). Read whenever
+  a session resumes after a kill / network drop.
+
 ## Trigger
 - Baton state: `EXECUTING` (entered from `BLUEPRINT_ACCEPTED`).
 

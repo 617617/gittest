@@ -10,6 +10,23 @@ short diagnosis, then routes to the right branch's reference doc for
 the procedure. Detailed branch procedures live under `references/` so
 the SKILL.md stays a thin dispatcher.
 
+## Required reading (load these before acting)
+
+This skill's load-bearing detail is split across `references/`.
+**The SKILL.md alone is not sufficient for correct execution** — the
+3 branch procedure files contain commands, recovery paths, and
+collision logic that the dispatcher only summarizes.
+
+After Step 3 (diagnose state) routes you to a branch, read the
+matching reference completely before doing anything in that branch:
+
+- `references/branch-a-fresh-start.md` — fresh-start path (no Phase
+  open yet): kickoff write + commit-before-rebase + cleanup.
+- `references/branch-b-in-progress.md` — open-Phase path: status
+  block + lane lookup + paste-to-Codex message.
+- `references/branch-c-chain-decision.md` — close + chain-mode
+  decision tree + atomic chain advance + recovery.
+
 ## When to invoke
 
 - The user wants to start the first Phase.
