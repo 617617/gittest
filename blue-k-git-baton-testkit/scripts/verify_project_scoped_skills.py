@@ -18,6 +18,11 @@ CODEX_LANES = {
     "blue-k-other-index",
 }
 MIXED_LANES = {"blue-k-consensus"}
+CC_LANES = {
+    "blue-k-planner",
+    "blue-k-plan-audit",
+}
+BATON_LANES = CODEX_LANES | MIXED_LANES | CC_LANES
 EXPECTED_SKILLS = {
     "blue-k-planner",
     "blue-k-plan-audit",
@@ -124,7 +129,7 @@ def main() -> int:
         if "default_prompt:" not in metadata_text:
             fail(f"{name} metadata lacks default_prompt")
 
-        if name in CODEX_LANES or name in MIXED_LANES:
+        if name in BATON_LANES:
             if "AI Chat Contract (v0.10)" not in skill_text:
                 fail(f"{name} lacks AI Chat Contract (v0.10)")
             if "blue-k-git-baton-testkit/references/ai-chat-contract.md" not in skill_text:
@@ -147,6 +152,7 @@ def main() -> int:
     print(f"SkillRoot: {SKILL_ROOT.as_posix()}")
     print("CodexLanes: " + " ".join(sorted(CODEX_LANES)))
     print("MixedLanes: " + " ".join(sorted(MIXED_LANES)))
+    print("CCLanes:    " + " ".join(sorted(CC_LANES)))
     return 0
 
 
