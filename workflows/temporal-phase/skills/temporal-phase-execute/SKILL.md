@@ -6,94 +6,30 @@ description: Codex executes the Phase per the accepted blueprint. Trigger EXECUT
 # temporal-phase / execute (Codex lane)
 
 ## Trigger
-- Baton state: `EXECUTING` (entered from `BLUEPRINT_ACCEPTED`)
+- Baton state: `EXECUTING` (entered from `BLUEPRINT_ACCEPTED`).
 
 ## Reads
 - The final accepted blueprint (original blueprint or the last
-  `blueprint-revision-r*.md`)
-- The blueprint's `PackagePath:` pointer + `PackageCommit:` SHA
+  `blueprint-revision-r*.md`).
+- The blueprint's `PackagePath:` pointer + `PackageCommit:` SHA.
 - Inside the package: `PACKAGE_CHARTER.md` / `scope.md` /
-  `HANDOFF_execute.md` / each `stage-NN/{EXECUTE,scope,evidence}.md`
-- You must follow the `## Tools` section below — **do not** rewrite
+  `HANDOFF_execute.md` / each `stage-NN/{EXECUTE,scope,evidence}.md`.
+- The Runner contract — see `## Tools` below; do **not** rewrite
   stages manually.
 
-## Tools — Delegate to the Temporal Package Runner
+## Tools
 
-The actual executor is the work-repo-registered Codex skill
-`temporal-package-runner`. This lane is only the coord-side "launch +
-acceptance" shell.
+Delegate to the work-repo Codex skill `temporal-package-runner`. This
+lane is only the coord-side "launch + acceptance" shell; the Runner's
+code changes land in the work repo.
 
-### 1. The Runner's contract (authoritative source)
+Two invocation paths exist (no-CWD-switch follow-procedure, or
+explicit `CWD = temporal:` + `/temporal-package-runner`).
 
-Runner SKILL.md location (resolved via the `temporal:` prefix in
-`PATHS.md`):
-
-```text
-temporal:.codex/skills/temporal-package-runner/SKILL.md
-temporal:local-skill-bundles/temporal-skills-2026-05-21/local/temporal-package-runner/SKILL.md
-```
-
-Read it before opening this lane. It defines:
-- the allowed repository scope (`temporal:` only);
-- the strict-serial contract across three layers: main runner /
-  package-runner subagent / stage-loop-auto — **exactly one** per layer;
-- `pending/` exactly-one before any run;
-- package-local mandatory reads: `PACKAGE_CHARTER`, `scope`,
-  `HANDOFF_execute`, `stage-*/*`;
-- post-execution archive: follow `RUN_AFTER_EXECUTION_PROTOCOL.md`; the
-  Runner owns package-store moves, queue/index updates, and the final
-  user report;
-- post-execution audit / repair orchestration also belongs to the main
-  Runner. Note: this overlaps conceptually with our three `postexec-*`
-  lanes; the coord side synthesizes both (see §4).
-
-### 2. Invocation paths
-
-Given that Codex-side `.codex/skills.json` currently keeps
-`allowGlobalFallback: false`, pick one of:
-
-- **Option A (recommended, no CWD switch).** This lane is "follow the
-  Runner's SKILL.md procedure" — read the Runner SKILL.md, then in the
-  work repo enforce the strict-serial contract:
-  `Runner → exactly one package-runner subagent → stage-loop-auto`.
-- **Option B (explicit CWD switch).** Open a second Codex session with
-  CWD = `temporal:` and run `/temporal-package-runner` there.
-
-The Runner's code changes land in the work repo. It does **not** write
-into the coord mailbox.
-
-### 3. coord-side product (what this lane writes)
-
-The coord side carries one "execution report + work-repo change
-pointers" file — no code is copied across:
-
-```text
-BatonNext: EXECUTION_REPORTED
-
-# Phase <id> — Execution Report
-
-PackagePath: temporal:docs/.../stage-loop-auto-packages/<dest>/<package-id>/
-            (after Runner moves it, record the final location)
-RunnerVerdict: COMPLETED | BLOCKED | PARTIAL
-ActualChanges:
-  - temporal@<sha1>  <commit subject>
-  - temporal@<sha2>  ...
-ValidationResults:
-  - <stage-NN>: <evidence path + conclusion>
-ResidualRisks: ...
-EvidenceArtifacts:
-  - temporal:<stage-NN>/evidence.md
-NextStepSuggestions: ...
-```
-
-### 4. Relationship to subsequent baton lanes
-
-The Runner does its own post-execution audit / repair internally. The
-`postexec-subagent-review` lane in this baton then runs an **outer
-second pass** with fresh Codex subagents — it does not replace the
-Runner's internal audit. The outer pass works on the full evidence
-already in the coord mailbox and asks: "does this match the Phase
-blueprint, do we need Phase-level repair?"
+Full contract (Runner SKILL.md locations, strict-serial three-layer
+rule, package-local reads, post-execution archive, coord-side
+product format, relationship to subsequent baton lanes): see
+`references/tools-runner.md`.
 
 ## Execution constraints
 - **No scope creep.** Stay strictly inside `AllowedFiles:`.
@@ -105,77 +41,22 @@ blueprint, do we need Phase-level repair?"
   `temporal@<short-sha>`; do not copy code.
 
 ## Writes
-- `from-codex/<phase-id>__execution-report.md` (the coord product from
-  §3)
-- BatonNext: `EXECUTION_REPORTED`
+- `from-codex/<phase-id>__execution-report.md` (the coord product
+  shaped per `references/tools-runner.md` §3).
+- BatonNext: `EXECUTION_REPORTED`.
 
-## Push order (cross-repo consistency)
-
-Execution writes commits in **two repos** (work repo for the actual
-code changes; coord repo for the execution-report pointer). To avoid
-dangling references — where the coord-side `ActualChanges:` cites a
-`temporal@<sha>` that exists only on your local machine — push in
-this strict order:
-
-1. **First**, push the work repo (Temporal):
-   ```bash
-   cd $(temporal:)
-   git push origin <work-branch>
-   ```
-   Confirm exit 0 before continuing.
-
-2. **Only then**, push the coord repo (gittest):
-   ```bash
-   cd $(gittest:)
-   git push origin master
-   ```
-
-If the first push fails (network drop, lock, conflict): do **not**
-push the coord repo. On next `/temporal-phase-codex-sync` you will
-see baton state still `EXECUTING` (no execution-report in coord);
-retry the work-repo push first, then write/push the coord pointer.
-
-If somehow the coord push happened but the work-repo push failed:
-CC's `postexec-subagent-review` lane will fail to resolve the
-`ActualChanges:` SHAs and surface a `CROSS_REPO_MISSING_REF` error;
-recovery is "push the work repo, then have CC retry the audit". A
-standalone check exists: `scripts/verify_cross_repo_refs.py` walks
-both mailboxes + archive and flags any pointer whose `temporal@<sha>`
-is unreachable from the local work-repo clone.
-
-### Resume after crash mid-execution
-
-If your CLI dies (network drop, session killed) while you were
-executing — possibly after some work-repo commits/pushes but before
-the coord-side execution-report was written — recovery on next
-session start is:
-
-1. `/temporal-phase-codex-sync` will report baton state still
-   `EXECUTING` (or whichever earlier state, because no
-   execution-report has landed in coord yet).
-2. In the work repo, run
-   `cd $(temporal:) && git log --oneline -20` to find your most recent
-   commits. Confirm they were already pushed
-   (`git status -sb`; look for `[ahead N]` — if N>0, push them now).
-3. If the package execution is **complete in the work repo** but the
-   coord-side report was never written: write
-   `from-codex/<phase-id>__execution-report.md` now per §3 product
-   structure, citing the actual work-repo commits, then follow the
-   push order above (coord-only push since work is already pushed).
-4. If execution is **partial in the work repo** (e.g., only the
-   first stage was committed before the crash): resume the Runner
-   from where it stopped — `stage-loop-auto` is internally serial,
-   you can restart the package and it picks up the next pending
-   stage. Only after the package finishes do you write the
-   coord-side report.
-
-Do not write a coord-side execution-report claiming work that you
-have not actually committed to the work repo. The
-`verify_cross_repo_refs.py` check will catch fabricated SHAs at
-audit time.
+## Push order
+Work-repo push first, then coord-repo push. Full procedure +
+first-push-failure / second-push-failure recovery + the
+`CROSS_REPO_MISSING_REF` audit-side error live in
+`references/push-order.md`. Crash mid-execution? See
+`references/crash-recovery.md`.
 
 ## Authority
 Codex-only. CC must not write the execution report into `from-codex/`.
 
 ## See also
-`ROLES.md` Step 7 · `BATON.schema.md` state `EXECUTING`
+- `references/tools-runner.md` — full Runner delegation contract
+- `references/push-order.md` — cross-repo push order + recovery
+- `references/crash-recovery.md` — resume after CLI kill mid-execution
+- `ROLES.md` Step 7 · `BATON.schema.md` state `EXECUTING`

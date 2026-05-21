@@ -449,6 +449,71 @@ Branch C decision tree, so the rules live in one place.
 
 ---
 
+## P23 — Progressive-disclosure layering in skills
+
+**Problem.** Skills accumulate detail as a workflow matures: each new
+safety mechanism (Tools delegation, push-order discipline, crash
+recovery, Fallback modes, atomic chain advance, collision helpers,
+runtime parsers) adds another section to the affected `SKILL.md`. By
+the fifth round of fixes, the orchestrator skill in this preset had
+grown to 425 lines. The AI loads the whole SKILL.md every time, even
+when only one branch / state / scenario is relevant.
+
+**Shape.** Treat each `<preset>/skills/<skill>/` directory as a
+two-layer document:
+
+- **`SKILL.md`** is the **thin dispatcher** (~80-120 lines max). It
+  contains:
+  - YAML frontmatter (`name`, `description`).
+  - When to invoke / Trigger.
+  - High-level steps (1-3 setup actions + branch routing pointers).
+  - Required verifier markers (`BatonNext`, `Reads`, `Writes`,
+    `## Tools`, work-repo skill name, etc.) preserved here so the
+    verifier passes.
+  - Pointers: "for X, see `references/<topic>.md`".
+- **`references/`** is the **detail subdirectory**. Each file is
+  self-contained for one scenario / branch / topic:
+  - `references/branch-a-fresh-start.md` (orchestrator branch).
+  - `references/tools-<runner-name>.md` (full delegation contract).
+  - `references/push-order.md` (cross-repo push discipline + recovery).
+  - `references/crash-recovery.md` (mid-execution resume).
+  - `references/fallback-modes.md` (degraded-mode procedures).
+  - `references/event-handling.md` (watcher event table).
+  - etc.
+
+**Refactor triggers.**
+- SKILL.md > 200 lines → review for extraction candidates.
+- SKILL.md contains > 3 distinct concerns → each concern wants its
+  own reference file.
+- Any one section is > 50 lines → consider extracting it.
+
+**Verifier compatibility.** If a registration verifier inspects
+SKILL.md for required marker strings (e.g.,
+`scripts/verify_<preset>_skills.py`'s
+`REQUIRED_SKILL_MARKERS = ("BatonNext", "Trigger", "Reads", "Writes")`
+plus the `## Tools` and work-repo skill-name checks), keep those
+markers in the main SKILL.md text — typically as section headers
+with a 3-5 line summary + a pointer to the detailed reference. The
+verifier passes; the detail lives in references.
+
+**Reference.** Implemented in commit after `6581c98`:
+- `.claude/skills/temporal-phase-start/`: SKILL.md (116 lines) +
+  `references/{branch-a-fresh-start,branch-b-in-progress,branch-c-chain-decision}.md`.
+- `.claude/skills/temporal-phase-watch/`: SKILL.md + references for
+  event-handling / monitor-command / failure-modes.
+- `workflows/temporal-phase/skills/temporal-phase-codex-sync/`:
+  SKILL.md + references for fallback-modes / sort-tiebreak.
+- `workflows/temporal-phase/skills/temporal-phase-blueprint/`:
+  SKILL.md + references for tools-generator / push-order.
+- `workflows/temporal-phase/skills/temporal-phase-execute/`: SKILL.md
+  + references for tools-runner / push-order / crash-recovery.
+
+Lane SKILLs that are already short (50-100 lines, single-concern)
+do not need refactoring. The pattern triggers on size + concern
+count.
+
+---
+
 ## P18 — On-demand sync skill on the non-orchestrator side
 
 **Problem.** CC has a watcher + a one-command orchestrator. The other

@@ -163,6 +163,52 @@ Vague prompts like "audit the workflow for problems" returned vague
 answers. Specific prompts returned actionable findings with file:line
 citations.
 
+## Lesson 10 — Skills grow over iterations; refactor when they cross 150-200 lines
+
+Every time we layered a new safety mechanism (Tools delegation,
+push-order, crash-recovery, Fallback modes, atomic chain, collision
+helpers), the affected SKILL.md grew. By round 5, the orchestrator
+`temporal-phase-start/SKILL.md` had ballooned to 425 lines — well past
+the threshold where a reader can hold it in working memory.
+
+Symptom: the AI loads the entire SKILL.md into context every time the
+skill is invoked, including pages of detail it does not need for the
+current branch / state. Even an in-context model wastes attention on
+irrelevant procedure.
+
+Fix: **progressive disclosure**. The SKILL.md stays a thin dispatcher
+(80-120 lines) covering:
+- frontmatter,
+- when to invoke,
+- high-level steps (1-3 setup, then route),
+- pointers to `references/<topic>.md` for the detail.
+
+Detail (decision trees, full procedures, helper code blocks, fallback
+modes, recovery paths) lives in `references/` subdirectory files,
+each self-contained and loaded on demand based on the current branch
+or scenario.
+
+Watch for the trigger to refactor:
+- SKILL.md > 200 lines → likely past the threshold; review.
+- SKILL.md contains > 3 distinct concerns (e.g., Tools + Push order +
+  Crash recovery + Fallback modes) → each concern wants its own
+  reference file.
+- One section is > 50 lines → consider extracting it.
+
+Round-5 refactor results (committed in the same batch as this
+lesson):
+- `temporal-phase-start/SKILL.md`: 425 → 116 lines (Branch A/B/C
+  decision trees + collision helper extracted to 3 references).
+- `temporal-phase-watch/SKILL.md`: 178 → target ~100 lines.
+- `temporal-phase-codex-sync/SKILL.md`: 162 → target ~100 lines.
+- `temporal-phase-blueprint/SKILL.md`: 171 → target ~100 lines.
+- `temporal-phase-execute/SKILL.md`: 181 → target ~100 lines.
+
+Each verifier-checked marker (e.g., `BatonNext`, `## Tools`,
+work-repo skill name) was preserved in the SKILL.md text; only
+"second-tier" detail moved to references. See PATTERNS P23 for the
+durable pattern.
+
 ## How to use this file
 
 When designing the next preset (or the next major change to
