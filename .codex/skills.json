@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "scope": "project",
+  "skillRoot": "blue-k-git-baton-testkit/skills",
+  "allowGlobalFallback": false,
+  "skills": [
+    {
+      "name": "blue-k-planner",
+      "path": "blue-k-git-baton-testkit/skills/blue-k-planner"
+    },
+    {
+      "name": "blue-k-plan-audit",
+      "path": "blue-k-git-baton-testkit/skills/blue-k-plan-audit"
+    },
+    {
+      "name": "blue-k-main-runner",
+      "path": "blue-k-git-baton-testkit/skills/blue-k-main-runner",
+      "codexLane": true
+    },
+    {
+      "name": "blue-k-other-runner",
+      "path": "blue-k-git-baton-testkit/skills/blue-k-other-runner",
+      "codexLane": true
+    },
+    {
+      "name": "blue-k-other-index",
+      "path": "blue-k-git-baton-testkit/skills/blue-k-other-index",
+      "codexLane": true
+    },
+    {
+      "name": "traceable-plan",
+      "path": "blue-k-git-baton-testkit/skills/traceable-plan"
+    },
+    {
+      "name": "pre-doc-review",
+      "path": "blue-k-git-baton-testkit/skills/pre-doc-review"
+    },
+    {
+      "name": "stage-loop-auto",
+      "path": "blue-k-git-baton-testkit/skills/stage-loop-auto"
+    },
+    {
+      "name": "stage-loop",
+      "path": "blue-k-git-baton-testkit/skills/stage-loop"
+    },
+    {
+      "name": "doc-review",
+      "path": "blue-k-git-baton-testkit/skills/doc-review"
+    },
+    {
+      "name": "traceable-review",
+      "path": "blue-k-git-baton-testkit/skills/traceable-review"
+    }
+  ]
+}
