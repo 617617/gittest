@@ -26,9 +26,9 @@ live-set since it is about to be archived):
 ```bash
 ALL_IDS=$( {
   ls workflows/temporal-phase/_coord/from-cc/ workflows/temporal-phase/_coord/from-codex/ 2>/dev/null \
-    | grep -oE '^phase-[0-9]+';
+    | grep -oE '^phase-[a-zA-Z0-9][a-zA-Z0-9-]*';
   ls workflows/temporal-phase/_coord/archive/ 2>/dev/null \
-    | grep -oE '^phase-[0-9]+';
+    | grep -oE '^phase-[a-zA-Z0-9][a-zA-Z0-9-]*';
 } | sort -u | grep -vx "<closed-id>" )
 echo "$ALL_IDS" | grep -qx "<candidate-id>"
 
@@ -48,8 +48,8 @@ If `grep -qx` returns 0 OR the reuse echo fires, treat as
   to step C3 (archive prompt).
 - `NextPhasePlan:` block missing or no `NextPhaseId:` → chain ended
   naturally. Cite `StopReason:` if given. Skip to C3.
-- `NextPhaseId:` fails `^phase-\d+$` regex → report
-  `CHAIN_INVALID_ID`. Skip to C3.
+- `NextPhaseId:` fails `^phase-[a-zA-Z0-9][a-zA-Z0-9\-]*$` regex →
+  report `CHAIN_INVALID_ID`. Skip to C3.
 - Helper returns collision → report
   `CHAIN_COLLISION: <NextPhaseId> already exists as <live|archived>`
   (or `reuse of just-closed`). Do NOT auto-advance. Skip to C3.

@@ -12,8 +12,9 @@ is no copy-paste chat relay for the kickoff** — it lives in git.
 Ask, in chat (not in a tool):
 
 > Please provide:
->   1. A phase-id matching `^phase-\d+$` (e.g., `phase-01`,
->      `phase-11`).
+>   1. A phase-id matching `^phase-[a-zA-Z0-9][a-zA-Z0-9\-]*$`
+>      (Temporal's actual naming — `phase-01`, `phase-11`, `phase-r`,
+>      `phase-10A`, `phase-08-5`, `phase-14-5` are all valid).
 >   2. A short Phase goal description (1-3 sentences).
 >   3. (Optional) A source-document anchor: a short string
 >      identifying the section of the Temporal workflow doc this
@@ -74,9 +75,9 @@ surface the error, and stop. Nothing has been committed or pushed.
 ```bash
 ALL_IDS=$( {
   ls workflows/temporal-phase/_coord/from-cc/ workflows/temporal-phase/_coord/from-codex/ 2>/dev/null \
-    | grep -oE '^phase-[0-9]+';
+    | grep -oE '^phase-[a-zA-Z0-9][a-zA-Z0-9-]*';
   ls workflows/temporal-phase/_coord/archive/ 2>/dev/null \
-    | grep -oE '^phase-[0-9]+';
+    | grep -oE '^phase-[a-zA-Z0-9][a-zA-Z0-9-]*';
 } | sort -u )
 echo "$ALL_IDS" | grep -qx "<phase-id>" && echo "CHAIN_COLLISION: <phase-id> already in use" && exit 1
 ```

@@ -72,8 +72,8 @@ CODEX_STEP_TAGS = [
     re.compile(r"^close$"),
 ]
 
-PHASE_ID_RE = re.compile(r"^phase-\d+$")
-FILENAME_RE = re.compile(r"^(phase-\d+)__(.+)\.md$")
+PHASE_ID_RE = re.compile(r"^phase-[a-zA-Z0-9][a-zA-Z0-9\-]*$")
+FILENAME_RE = re.compile(r"^(phase-[a-zA-Z0-9][a-zA-Z0-9\-]*)__(.+)\.md$")
 BATON_NEXT_RE = re.compile(r"^BatonNext:\s+([A-Z_0-9]+)\s*$")
 
 

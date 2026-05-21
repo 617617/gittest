@@ -67,9 +67,13 @@ a stable ID (`CC-NN`); `temporal-phase-close/SKILL.md` and
 ## Phase-id naming and concurrency
 
 - **Format.** Every Phase carries a `phase-id` matching the regex
-  `phase-\d+` (e.g., `phase-01`, `phase-12`). The phase-id is chosen
-  by CC in the kickoff artifact (see ROLES Step 0) and consumed by
-  Codex in the blueprint lane.
+  `phase-[a-zA-Z0-9][a-zA-Z0-9\-]*` (so all of `phase-01`,
+  `phase-12`, `phase-r`, `phase-10A`, `phase-08-5`, `phase-14-5`,
+  `phase-13A` are valid — Temporal's actual roadmap uses
+  letter-suffixed and decimal-converted-to-dash names alongside plain
+  integers, so the format must accept all of them). The phase-id is
+  chosen by CC in the kickoff artifact (see ROLES Step 0) and
+  consumed by Codex in the blueprint lane.
 - **One open Phase at a time.** A Phase is "open" from the moment its
   first artifact (the kickoff) lands in `from-cc/` until a matching
   `<phase-id>__close.md` is written by Codex. Two phase-ids may **not**

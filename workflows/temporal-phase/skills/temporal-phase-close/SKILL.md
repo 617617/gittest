@@ -82,7 +82,7 @@ do nothing, per `workflows/_active.md` `ChainMode:` (see CHARTER
   `NextPhaseId`** and include `StopReason: blocked`. A blocked Phase
   never auto-advances.
 
-`NextPhaseId` must match `^phase-\d+$` and **must not** collide with
+`NextPhaseId` must match `^phase-[a-zA-Z0-9][a-zA-Z0-9\-]*$` and **must not** collide with
 any phase-id that already has artifacts in the live mailboxes or
 archive. The chain logic and `check_baton_artifacts.py` enforce
 this.

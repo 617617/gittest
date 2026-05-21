@@ -200,7 +200,7 @@ be in.
 
 The kickoff body fields:
 
-- `PhaseId:` — the phase id matching `phase-\d+` (this is your phase
+- `PhaseId:` — the phase id matching `phase-[a-zA-Z0-9][a-zA-Z0-9\-]*` (this is your phase
   id; do not invent your own).
 - `Goal:` — what this Phase aims to do.
 - `SourceAnchor:` — optional section pointer into the source workflow

@@ -172,7 +172,11 @@ invariant §4.
 mailboxes scramble state recovery.
 
 **Shape.**
-- Unit IDs match a strict regex (e.g., `phase-\d+`).
+- Unit IDs match a strict regex (e.g.,
+  `phase-[a-zA-Z0-9][a-zA-Z0-9\-]*` — generous enough to accept
+  decimal-to-dash names like `phase-08-5`, letter-suffixed like
+  `phase-10A`, and named like `phase-r`; do NOT over-restrict to
+  `phase-\d+` if the work-repo project uses richer naming).
 - Filename pattern enforced: `<unit-id>__<step-tag>.md`.
 - The artifact checker enforces "at most one open unit" (open = has
   artifacts but no matching `<unit-id>__close.md`).
