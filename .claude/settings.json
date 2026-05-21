@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"SessionStart\",\"additionalContext\":\"Blue-K v0.10 testkit auto-arm: invoke /bk-watch to boot the test watchers if they are not already running this session.\"}}'"
+          }
+        ]
+      }
+    ]
+  }
+}
