@@ -1,0 +1,7 @@
+interface:
+  display_name: "Temporal Phase / Post-Exec Review (CC)"
+  short_description: "CC independent post-execution review. Codex must refuse."
+  default_prompt: "This lane is CC-only. Codex must refuse — independent CC review is the workflow's check on Codex's subagent review."
+
+policy:
+  allow_implicit_invocation: false

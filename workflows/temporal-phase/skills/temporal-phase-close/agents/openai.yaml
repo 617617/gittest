@@ -1,0 +1,7 @@
+interface:
+  display_name: "Temporal Phase / Close (Codex)"
+  short_description: "Codex closes the Phase and verifies completion criteria."
+  default_prompt: "Use $temporal-phase-close when baton is PHASE_CLOSING to verify completion criteria and emit COMPLETED or BLOCKED_POSTEXEC."
+
+policy:
+  allow_implicit_invocation: false

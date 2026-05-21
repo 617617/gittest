@@ -1,0 +1,7 @@
+interface:
+  display_name: "Temporal Phase / Second-Audit Fix (Codex)"
+  short_description: "Codex final fix after the second dual audit."
+  default_prompt: "Use $temporal-phase-second-audit-fix when baton is SECOND_AUDIT_FIX to apply the final fixes and decide PASS or BLOCKED."
+
+policy:
+  allow_implicit_invocation: false

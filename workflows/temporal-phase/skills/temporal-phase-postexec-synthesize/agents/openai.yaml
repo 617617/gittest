@@ -1,0 +1,7 @@
+interface:
+  display_name: "Temporal Phase / Post-Exec Synthesize (Codex)"
+  short_description: "Codex synthesizes post-execution reviews from both sides."
+  default_prompt: "Use $temporal-phase-postexec-synthesize when baton is POSTEXEC_SYNTHESIS to merge subagent + CC review and decide fix scope."
+
+policy:
+  allow_implicit_invocation: false

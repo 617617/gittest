@@ -1,0 +1,7 @@
+interface:
+  display_name: "Temporal Phase / Pre-Audit Synthesize (CC)"
+  short_description: "CC synthesizes both pre-execution audits. Codex must refuse."
+  default_prompt: "This lane is CC-only. Codex must refuse — pre-audit synthesis is the closure judge."
+
+policy:
+  allow_implicit_invocation: false

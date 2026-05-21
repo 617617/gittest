@@ -1,0 +1,7 @@
+interface:
+  display_name: "Temporal Phase / Pre-Audit (Codex)"
+  short_description: "Codex-side pre-execution audit of the Phase blueprint."
+  default_prompt: "Use $temporal-phase-pre-audit-codex when baton is PRE_AUDIT_R1/R2/R3 to audit the blueprint from Codex's perspective."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,7 +1,16 @@
-# Active Workflow Preset
+# Primary workflow focus (informational only)
 
-Active: temporal-phase
+PrimaryFocus: temporal-phase
 
-切换方式:把上面那一行的 `none` 改为 `workflows/` 下某个 preset 的目录
-名(例如 `temporal-phase`),并提交。`blue-k-git-baton-testkit/` 不读取
-本文件,因此修改本文件不会影响 testkit 的既有流程。
+This file is **informational**. It records which workflow has the user's
+primary focus right now, as a hint for new conversations. It is **not**
+read by any watcher, verifier, or hook, and does **not** gate anything.
+
+Multiple workflows may be enabled in parallel — every workflow with a
+subdirectory under `workflows/` (or `blue-k-git-baton-testkit/` for the
+testkit) is "enabled" by virtue of existing. Each has its own watcher
+skill (`/temporal-phase-watch`, `/bk-watch`, etc.) that arms
+independently and only touches its own coord directory.
+
+To redirect the user's primary focus, just edit the `PrimaryFocus:`
+line — no other file needs to change.

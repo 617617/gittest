@@ -1,0 +1,7 @@
+interface:
+  display_name: "Temporal Phase / Blueprint (Codex)"
+  short_description: "Codex creates the Phase blueprint (temporal-phase workflow)."
+  default_prompt: "Use $temporal-phase-blueprint when baton is DRAFTING_BLUEPRINT to draft the Phase blueprint."
+
+policy:
+  allow_implicit_invocation: false

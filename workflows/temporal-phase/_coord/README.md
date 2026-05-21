@@ -1,13 +1,14 @@
-# _coord — temporal-phase 邮箱
+# _coord — temporal-phase mailbox
 
-本目录是 `temporal-phase` 预设的 git-tracked 邮箱,与
-`blue-k-git-baton-testkit/_coord/` 完全独立。
+This directory is the git-tracked mailbox for the `temporal-phase`
+preset. It is fully independent from `blue-k-git-baton-testkit/_coord/`.
 
-- `from-cc/` — CC 发送给 Codex 的产物(执行前审核、汇总、修复、执行
-  后审核等)。
-- `from-codex/` — Codex 发送给 CC 的产物(蓝图、执行报告、subagent
-  审核、汇总、修复、收尾等)。
+- `from-cc/` — products CC sends to Codex (pre-execution audit,
+  synthesis, repair, post-execution audit, etc.).
+- `from-codex/` — products Codex sends to CC (blueprint, execution
+  report, subagent review, synthesis, repair, close, etc.).
 
-文件命名:`<phase-id>__<step-tag>.md`(见 `../ROLES.md` Step Matrix
-列出的产物名)。每份文件首行 `BatonNext: <STATE>` 显式声明状态机要转
-移到的状态(状态名见 `../BATON.schema.md`)。
+Filename convention: `<phase-id>__<step-tag>.md` (see Step Matrix in
+`../ROLES.md`). Every product's first line must be `BatonNext: <STATE>`,
+explicitly declaring the next state to which the state machine should
+transition (state names in `../BATON.schema.md`).

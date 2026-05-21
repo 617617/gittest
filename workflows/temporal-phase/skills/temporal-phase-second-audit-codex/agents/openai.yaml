@@ -1,0 +1,7 @@
+interface:
+  display_name: "Temporal Phase / Second-Audit (Codex)"
+  short_description: "Codex second dual audit; subagents re-audit the fix."
+  default_prompt: "Use $temporal-phase-second-audit-codex when baton is SECOND_AUDIT_CODEX to re-audit the postexec fix."
+
+policy:
+  allow_implicit_invocation: false

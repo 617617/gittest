@@ -1,0 +1,7 @@
+interface:
+  display_name: "Temporal Phase / Second-Audit Decision (Codex)"
+  short_description: "Codex decides whether to enter the second dual audit."
+  default_prompt: "Use $temporal-phase-second-audit-decision when baton is SECOND_AUDIT_DECISION to judge YES/NO."
+
+policy:
+  allow_implicit_invocation: false

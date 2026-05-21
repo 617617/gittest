@@ -1,0 +1,7 @@
+interface:
+  display_name: "Temporal Phase / Blueprint Revise (CC)"
+  short_description: "CC repairs the Phase blueprint. Codex must refuse."
+  default_prompt: "This lane is CC-only. Codex must refuse — blueprint repair belongs to the CC synthesis loop."
+
+policy:
+  allow_implicit_invocation: false

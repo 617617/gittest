@@ -1,0 +1,7 @@
+interface:
+  display_name: "Temporal Phase / Post-Exec Subagent Review (Codex)"
+  short_description: "Codex launches multiple subagents for the post-execution integrated review."
+  default_prompt: "Use $temporal-phase-postexec-subagent-review when baton is POSTEXEC_SUBAGENT_REVIEW to launch the multi-subagent review."
+
+policy:
+  allow_implicit_invocation: false

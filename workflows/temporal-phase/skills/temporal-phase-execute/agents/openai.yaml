@@ -1,0 +1,7 @@
+interface:
+  display_name: "Temporal Phase / Execute (Codex)"
+  short_description: "Codex executes the Phase per the blueprint and delivers the execution report."
+  default_prompt: "Use $temporal-phase-execute when baton is EXECUTING to perform the Phase work and write the execution report."
+
+policy:
+  allow_implicit_invocation: false

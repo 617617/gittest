@@ -1,0 +1,7 @@
+interface:
+  display_name: "Temporal Phase / Second-Audit (CC)"
+  short_description: "CC second dual audit. Codex must refuse."
+  default_prompt: "This lane is CC-only. Codex must refuse — second audit needs independent CC review."
+
+policy:
+  allow_implicit_invocation: false

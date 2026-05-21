@@ -55,6 +55,76 @@
     {
       "name": "traceable-review",
       "path": "blue-k-git-baton-testkit/skills/traceable-review"
+    },
+    {
+      "name": "temporal-phase-blueprint",
+      "path": "workflows/temporal-phase/skills/temporal-phase-blueprint",
+      "codexLane": true
+    },
+    {
+      "name": "temporal-phase-pre-audit-codex",
+      "path": "workflows/temporal-phase/skills/temporal-phase-pre-audit-codex",
+      "codexLane": true
+    },
+    {
+      "name": "temporal-phase-pre-audit-cc",
+      "path": "workflows/temporal-phase/skills/temporal-phase-pre-audit-cc"
+    },
+    {
+      "name": "temporal-phase-pre-audit-synthesize",
+      "path": "workflows/temporal-phase/skills/temporal-phase-pre-audit-synthesize"
+    },
+    {
+      "name": "temporal-phase-blueprint-revise",
+      "path": "workflows/temporal-phase/skills/temporal-phase-blueprint-revise"
+    },
+    {
+      "name": "temporal-phase-execute",
+      "path": "workflows/temporal-phase/skills/temporal-phase-execute",
+      "codexLane": true
+    },
+    {
+      "name": "temporal-phase-postexec-subagent-review",
+      "path": "workflows/temporal-phase/skills/temporal-phase-postexec-subagent-review",
+      "codexLane": true
+    },
+    {
+      "name": "temporal-phase-postexec-cc",
+      "path": "workflows/temporal-phase/skills/temporal-phase-postexec-cc"
+    },
+    {
+      "name": "temporal-phase-postexec-synthesize",
+      "path": "workflows/temporal-phase/skills/temporal-phase-postexec-synthesize",
+      "codexLane": true
+    },
+    {
+      "name": "temporal-phase-postexec-fix",
+      "path": "workflows/temporal-phase/skills/temporal-phase-postexec-fix",
+      "codexLane": true
+    },
+    {
+      "name": "temporal-phase-second-audit-decision",
+      "path": "workflows/temporal-phase/skills/temporal-phase-second-audit-decision",
+      "codexLane": true
+    },
+    {
+      "name": "temporal-phase-second-audit-cc",
+      "path": "workflows/temporal-phase/skills/temporal-phase-second-audit-cc"
+    },
+    {
+      "name": "temporal-phase-second-audit-codex",
+      "path": "workflows/temporal-phase/skills/temporal-phase-second-audit-codex",
+      "codexLane": true
+    },
+    {
+      "name": "temporal-phase-second-audit-fix",
+      "path": "workflows/temporal-phase/skills/temporal-phase-second-audit-fix",
+      "codexLane": true
+    },
+    {
+      "name": "temporal-phase-close",
+      "path": "workflows/temporal-phase/skills/temporal-phase-close",
+      "codexLane": true
     }
   ]
 }

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Temporal Phase / Pre-Audit (CC)"
+  short_description: "CC-side pre-execution audit. Codex must refuse this lane."
+  default_prompt: "This lane is CC-only. Codex must refuse and route to $temporal-phase-pre-audit-codex instead."
+
+policy:
+  allow_implicit_invocation: false

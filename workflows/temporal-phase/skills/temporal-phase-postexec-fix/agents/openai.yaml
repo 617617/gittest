@@ -1,0 +1,7 @@
+interface:
+  display_name: "Temporal Phase / Post-Exec Fix (Codex)"
+  short_description: "Codex absorbs Adopted findings and applies the fix."
+  default_prompt: "Use $temporal-phase-postexec-fix when baton is POSTEXEC_FIX to apply adopted fixes and re-validate."
+
+policy:
+  allow_implicit_invocation: false

@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"SessionStart\",\"additionalContext\":\"Blue-K v0.10 testkit auto-arm: invoke /bk-watch to boot the test watchers if they are not already running this session.\"}}'"
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"SessionStart\",\"additionalContext\":\"Workflow watchers available in this repo (each idempotent, each only touches its own workflow): /bk-watch (Blue-K v0.10 testkit), /temporal-phase-watch (temporal-phase). Multiple workflows can run in parallel. Invoke whichever watchers correspond to the workflows you are participating in this session. workflows/_active.md is informational only and does not gate watchers.\"}}}'"
           }
         ]
       }

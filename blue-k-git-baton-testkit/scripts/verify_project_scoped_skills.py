@@ -102,13 +102,15 @@ def main() -> int:
         fail("skills must be a list")
 
     names = {entry.get("name") for entry in entries}
-    if names != EXPECTED_SKILLS:
-        missing = sorted(EXPECTED_SKILLS - names)
-        extra = sorted(names - EXPECTED_SKILLS)
-        fail(f"skill set mismatch; missing={missing}; extra={extra}")
+    missing = sorted(EXPECTED_SKILLS - names)
+    if missing:
+        fail(f"missing testkit skills: {missing}")
 
     for entry in entries:
         name = str(entry["name"])
+        if name not in EXPECTED_SKILLS:
+            # Other preset's skill (e.g., temporal-phase); validated by its own verifier.
+            continue
         rel_path = assert_relative(str(entry.get("path", "")), f"{name}.path")
         assert_inside_skill_root(rel_path, f"{name}.path")
 

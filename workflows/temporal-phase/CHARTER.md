@@ -1,61 +1,100 @@
 # temporal-phase — Charter
 
-## 源文档
+## Source document
 
 `E:/code/temporal/docs/skill-temporal-reorchestration/current/execution/PHASE_COLLABORATIVE_EXECUTION_WORKFLOW_ZH_2026-05-21.md`
 
-本预设是该源文档的"双 AI Git 协作映射版"。源文档保留为唯一权威文本,
-本目录只承担**操作化蒸馏**:把流程拆成可由 baton 状态机驱动的步骤。
-源文档发生变更时,本预设需要相应更新(ROLES、BATON.schema 优先)。
+This preset is the "dual-AI git-collaboration mapping" of that source
+document. The source remains the single authoritative text; this directory
+only carries an **operational distillation** — turning the prose flow into
+steps that a baton state machine can drive. When the source changes,
+update ROLES and BATON.schema first.
 
-## 基本单位
+## Unit of work
 
-Phase。一个 Phase 走完完整生命周期(蓝图 → 协同审核 → 执行 → 执行后
-双审 → 验收/阻塞)后才认为闭合。本预设的 baton 状态机即为 Phase 生
-命周期。
+Phase. A Phase is considered closed only after the full lifecycle
+(blueprint → pre-execution audit → execution → post-execution dual audit
+→ acceptance / blocked) has run. The baton state machine in this preset
+is that lifecycle.
 
-## 流程要点(12 节蒸馏)
+## Flow highlights (distilled from §2–§10)
 
-1. **蓝图先行**:每个 Phase 由 Codex 创建可执行蓝图,说明目标、范围、
-   允许修改的文件、验证方式、预期产物、风险边界。
-2. **执行前协同审核**:Codex 与 CC 分别从各自视角审核蓝图;CC 汇总
-   两方意见。
-3. **蓝图修复**:CC 吸收成立意见,更新计划;问题多或严重则再走一轮。
-4. **审核循环上限三轮**;三轮后仍阻塞则停下来重判 Phase 范围。
-5. **执行**:由 Codex 按已确认蓝图推进,不擅自扩范围;发现重大缺口
-   立刻停下并记录。
-6. **执行后 Codex 多 subagent 审核**:多角度审核执行结果。
-7. **执行后 CC 独立审核**:从另一视角判断。
-8. **意见汇总与修复**:汇总至 Codex,Codex 吸收成立意见并修复;不成
-   立/超范围意见也要明确记录处理结论。
-9. **可选二次双审**:大范围或高风险修复后再走一次完整双审,但不允许
-   无限循环。
-10. **完成标准**:见 §完成标准。
+1. **Blueprint first.** For every Phase, Codex creates an executable
+   blueprint stating goal, scope, allowed files, validation, expected
+   artifacts, and risk boundary.
+2. **Pre-execution collaborative audit.** Codex and CC each audit the
+   blueprint from their own angle; CC synthesizes both sides.
+3. **Blueprint repair.** CC absorbs valid findings and updates the plan.
+   If the issues are many or severe, run another round.
+4. **Audit loop is bounded to three rounds.** After round 3, if blockers
+   remain, stop and re-assess Phase scope.
+5. **Execution.** Codex drives execution strictly inside the accepted
+   blueprint; it does not widen scope. If a significant gap shows up,
+   stop and record rather than expand.
+6. **Codex multi-subagent post-execution review.** Multiple angles on the
+   execution result.
+7. **CC independent post-execution review.** A separate viewpoint.
+8. **Synthesis and repair.** Findings converge at Codex; Codex absorbs
+   valid items and repairs; invalid / out-of-scope items still need an
+   explicit disposition record.
+9. **Optional second dual audit.** If post-execution repair is large or
+   touches the core path, run one extra dual-audit round. Not unlimited.
+10. **Completion criteria.** See the §Completion criteria section.
 
-## 完成标准(§11 蒸馏)
+## Completion criteria (distilled from §11)
 
-一个 Phase 闭合当且仅当**同时**满足:
+A Phase closes only if **all** of the following hold. Each criterion has
+a stable ID (`CC-NN`); `temporal-phase-close/SKILL.md` and
+`scripts/verify_temporal_phase_skills.py` must reference the same IDs.
 
-- 执行前蓝图通过协同审核。
-- 执行没有超出确认范围,或超出部分已被明确记录并重新确认。
-- Codex 完成执行并整理执行结果。
-- Codex subagent 完成执行后综合审核。
-- CC 完成执行后独立审核。
-- Codex 汇总两边意见并吸收成立问题。
-- 必要的修复与验证已完成。
-- 大范围/高风险修复发生时,已完成一次额外双审 + 修复。
-- 阻塞性问题清零,剩余风险有明确记录与后续归属。
+- **CC-01** — The blueprint passed the pre-execution collaborative audit.
+- **CC-02** — Execution did not exceed the confirmed scope, or any
+  deviation was explicitly recorded and re-confirmed.
+- **CC-03** — Codex completed execution and produced the execution
+  report.
+- **CC-04** — Codex subagents completed the post-execution review.
+- **CC-05** — CC completed the independent post-execution review.
+- **CC-06** — Codex synthesized both sides and absorbed the valid
+  findings.
+- **CC-07** — Required repairs and re-validation are complete (N/A if
+  the synthesis Adopted set was empty).
+- **CC-08** — If a large or high-risk repair happened, one extra
+  dual-audit + repair cycle has completed (N/A if the
+  second-audit-decision was NO).
+- **CC-09** — Blockers are cleared; remaining risks have explicit
+  recording and follow-up ownership.
 
-## 与 blue-k-git-baton-testkit 的隔离
+## Phase-id naming and concurrency
 
-- 本预设**不**依赖 testkit 的脚本、skills、`_coord/` 或协议文件。
-- 本预设**不**修改 testkit 内任何文件。
-- 双方可同时存在于仓库中;testkit 不读取 `workflows/_active.md`。
-- 任何想让 testkit 与本预设互通的需求,应作为单独提案讨论,不在本
-  预设范围内。
+- **Format.** Every Phase carries a `phase-id` matching the regex
+  `phase-\d+` (e.g., `phase-01`, `phase-12`). Codex picks the next
+  phase-id at the start of the blueprint lane.
+- **One open Phase at a time.** A Phase is "open" from the moment its
+  first artifact lands in either mailbox until a matching `<phase-id>__close.md`
+  is written by Codex. Two phase-ids may **not** both be open at the
+  same time. To start the next Phase, the previous Phase must be closed.
+- **Enforcement.** `scripts/check_baton_artifacts.py` walks both
+  mailboxes and fails the run if (a) any filename does not match
+  `<phase-id>__<step-tag>.md`, (b) any phase-id violates the regex, or
+  (c) more than one open Phase exists. The `temporal-phase-watch` skill
+  runs this checker on every session boot, so violations surface
+  immediately.
 
-## 不在本预设范围内
+## Isolation from blue-k-git-baton-testkit
 
-- 实时执行 Phase 的真实代码(那是 Temporal 项目内部的事)。
-- 跨项目通用工作流抽象(刻意不抽象,先把单个预设做到位)。
-- 工作流元工具(`workflow-onboard` 等)——留待从本预设的样本中提炼。
+- This preset does **not** depend on the testkit's scripts, skills,
+  `_coord/`, or protocol files.
+- This preset does **not** modify any file inside the testkit.
+- The two coexist in the repo; the testkit does not read
+  `workflows/_active.md`.
+- Any proposal to bridge testkit and this preset is a separate discussion
+  and is **not** in scope for this preset.
+
+## Out of scope for this preset
+
+- Running Temporal code in real time (that belongs inside the Temporal
+  project itself).
+- Cross-project generic workflow abstractions. We intentionally do not
+  abstract — get one preset right first.
+- Workflow meta-tooling (e.g., a `workflow-onboard` generator). Save that
+  for distillation from this preset's running samples.
