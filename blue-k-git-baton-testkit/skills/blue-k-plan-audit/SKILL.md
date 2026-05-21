@@ -31,6 +31,28 @@ blue-k-planner creates K package
     -> stage-loop-auto executes only packages that passed audit
 ```
 
+## AI Chat Contract (v0.10)
+
+This skill runs only inside a Blue-K baton chat selected by `bk sync`. Three
+hard rules apply on every invocation — full text in
+`blue-k-git-baton-testkit/references/ai-chat-contract.md`:
+
+1. **First reply** begins with `I am <CC|Codex>. Lane: <lane>.` before any
+   tool call or repo read. The human matches this against the `WindowMatch`
+   hint printed by `bk sync`.
+2. **Wrong-window input must refuse.** If this chat does not match the
+   `ChatTarget` printed by the latest `bk sync`, do not acquire a lease,
+   edit files, or call any Blue-K skill; reprint the correct
+   `ChatTarget` / `ChatCommand` and stop.
+3. **Finalize with a fixed closing line.** After one safe assignment, push
+   the work branch and coordination branch atomically, write the next
+   holder into `BATON.yaml`, and end the reply with exactly
+   `Done. Now run: bk sync`. Do not chain into the next package, lane, or
+   assignment.
+
+For `/bk takeover`, no destructive recovery may begin before the human types
+`yes, abandon` in this chat.
+
 ## Core Rules
 
 - Audit documents only. Never edit source code.

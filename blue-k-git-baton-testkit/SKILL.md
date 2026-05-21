@@ -135,6 +135,9 @@ consensus loops, dependency recommendation loop, and relative-path setup notes.
 - `HANDOFF_REGISTER_CLAUDE_PROJECT_SKILLS.md`: handoff for Claude to register
   the two exposed project entries in the real repository.
 - `references/protocol-v0.10.md`: current forget-safe protocol specification.
+- `references/ai-chat-contract.md`: normative in-chat behavior (self-announce,
+  wrong-window refusal, fixed closing line) restated inline by every lane
+  skill.
 - `references/protocol-v0.9.md`: previous baseline retained for comparison.
 - `references/autonomy-proposal.md`: v0.11 autonomous loop proposal; read only
   when evaluating future safe auto-advance, not for normal v0.10 testing.
