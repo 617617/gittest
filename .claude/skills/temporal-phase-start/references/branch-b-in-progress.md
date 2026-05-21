@@ -67,9 +67,13 @@ procedure — including its `## Push procedure` section
 Emit a short reminder message the user can paste to Codex:
 
 ```text
-The baton is at <STATE>. Please run /temporal-phase-codex-sync.
-It will detect the new artifact and route you to the right lane
-(probably <lane name from HANDOFF table>).
+The baton is at <STATE>. Please run /temporal-phase-codex-sync to
+catch up; it will route you to the right lane (probably
+<lane name from HANDOFF table>). Open that lane:
+  workflows/temporal-phase/skills/<lane name>/SKILL.md
+Read it, produce the corresponding artifact in
+workflows/temporal-phase/_coord/from-codex/, then commit + push
+following the lane's "Push order" / "Push procedure" section.
 ```
 
 CC then takes no further action; the next Monitor event on

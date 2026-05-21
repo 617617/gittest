@@ -15,6 +15,7 @@ description: Codex creates the Phase execution blueprint. Trigger DRAFTING_BLUEP
   Phase id, goal, source-doc anchor, optional previous-close pointer.
 - Authoritative source document (anchor path at the top of
   `workflows/temporal-phase/CHARTER.md`, resolved via `PATHS.md`).
+  Use the kickoff's `SourceAnchor` field to find the relevant section.
 - Previous Phase's `from-codex/<prev-phase-id>__close.md` if named.
 - The Generator contract — see `## Tools` below; do **not** hand-roll
   a blueprint from imagination.

@@ -127,4 +127,6 @@ From now on, run /temporal-phase-codex-sync at every session start.
 ```
 
 After that one-time onboarding, future Phases never need a chat
-relay — the kickoff file is the only signal.
+relay — the kickoff file is the only signal. Codex does not need to
+stay online between Phases; `/temporal-phase-codex-sync` catches up
+on anything pending whenever Codex boots.

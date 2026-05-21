@@ -200,3 +200,8 @@ with the SKILL.md §5 final summary line, e.g.:
 ```text
 temporal-phase-start: Branch C -- chain advanced (phase-01 -> phase-02)
 ```
+
+If the user wants to resume an interrupted chain after this branch
+returns, the two normal recovery levers are: edit
+`workflows/_active.md` `ChainMode:` to the desired value (auto /
+confirm / off) and commit, or start a manual next Phase via Branch A.

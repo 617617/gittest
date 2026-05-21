@@ -40,20 +40,27 @@ Run `git pull origin master`. Report any new commits. If pull fails
 Run `python scripts/verify_temporal_phase_skills.py` (expect
 `PASS: temporal-phase skills verified`) and the testkit verifier
 `python blue-k-git-baton-testkit/scripts/verify_project_scoped_skills.py`
-(both presets share `.codex/skills.json`). Stop on any FAIL.
+(expect `PASS: project-scoped Blue-K skills verified` — both presets
+share `.codex/skills.json`). Stop on any FAIL.
 
 ### 3.5. Validate runtime baton artifacts
 
-Run `python scripts/check_baton_artifacts.py` — catches malformed
-filenames, missing/illegal `BatonNext:` lines, authority violations,
-and more-than-one open Phase. Stop on FAIL (fixes need human triage).
+Run `python scripts/check_baton_artifacts.py` (expect
+`PASS: N baton artifact(s) checked`) — catches malformed filenames,
+missing/illegal `BatonNext:` lines, authority violations, and
+more-than-one open Phase. Stop on FAIL (fixes need human triage).
 
 ### 4. Check baton state (informational, non-blocking)
 
-List the most recent files under origin/master in both mailboxes
-(`workflows/temporal-phase/_coord/from-codex` and `from-cc`) via
-`git ls-tree --name-only`. If either is empty, note "no Phase started
-yet" but continue — the monitor will catch new files when they land.
+List the most recent files under origin/master in both mailboxes:
+
+```bash
+git ls-tree --name-only origin/master:workflows/temporal-phase/_coord/from-codex 2>/dev/null | grep -v '^\.gitkeep$' | sort
+git ls-tree --name-only origin/master:workflows/temporal-phase/_coord/from-cc   2>/dev/null | grep -v '^\.gitkeep$' | sort
+```
+
+If either is empty, note "no Phase started yet" but continue — the
+monitor will catch new files when they land.
 
 ### 5. Arm Monitor — new files in from-codex/ (if not running)
 
