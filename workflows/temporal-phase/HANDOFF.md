@@ -41,18 +41,21 @@ When the source changes, sync ROLES and BATON.schema first.
 
 ## 2.1 Registered skill list
 
-All 15 lanes are registered in `.codex/skills.json` and loaded by the
+All 16 skills are registered in `.codex/skills.json` and loaded by the
 Codex CLI at startup. Registration is validated by
 `scripts/verify_temporal_phase_skills.py` (`PASS: temporal-phase skills
 verified` means healthy).
 
-Codex sees 10 Codex lanes (each can be invoked directly via
-`/<lane-name>`):
+Codex sees 10 Codex **lane** skills (each writes a baton artifact when
+its trigger state is current):
 `temporal-phase-blueprint`, `temporal-phase-pre-audit-codex`,
 `temporal-phase-execute`, `temporal-phase-postexec-subagent-review`,
 `temporal-phase-postexec-synthesize`, `temporal-phase-postexec-fix`,
 `temporal-phase-second-audit-decision`, `temporal-phase-second-audit-codex`,
 `temporal-phase-second-audit-fix`, `temporal-phase-close`.
+
+Plus 1 Codex **operational** skill (no baton artifact; informational):
+`temporal-phase-codex-sync`. See §2.2 below for how to use it.
 
 The 5 CC-only lanes are also registered (`temporal-phase-pre-audit-cc`,
 `temporal-phase-pre-audit-synthesize`, `temporal-phase-blueprint-revise`,
@@ -60,6 +63,23 @@ The 5 CC-only lanes are also registered (`temporal-phase-pre-audit-cc`,
 should **not** execute them. Their `default_prompt` is marked "Codex
 must refuse". When asked to take one of these lanes, refuse and indicate
 that it is a CC lane.
+
+## 2.2 Boot procedure (every Codex session)
+
+On every Codex CLI startup on Host B (and any time you want to confirm
+state), run:
+
+```text
+/temporal-phase-codex-sync
+```
+
+That skill (a) pulls origin, (b) runs the verifiers, (c) inspects the
+mailbox, and (d) reports your next action. If a kickoff or an
+unresponded CC product is waiting, it will name the exact lane you
+should open. If nothing is pending, it reports "waiting on CC" or "no
+Phase open" and you can stop. You do not need to keep your Codex
+session open between Phases — `/temporal-phase-codex-sync` is how you
+catch up on anything you missed while offline.
 
 ## 3. Your role in this preset
 

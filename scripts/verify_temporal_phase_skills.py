@@ -29,6 +29,8 @@ CODEX_LANES = {
     "temporal-phase-second-audit-codex",
     "temporal-phase-second-audit-fix",
     "temporal-phase-close",
+    # Operational (not part of the state machine; produces no baton artifact):
+    "temporal-phase-codex-sync",
 }
 CC_LANES = {
     "temporal-phase-pre-audit-cc",

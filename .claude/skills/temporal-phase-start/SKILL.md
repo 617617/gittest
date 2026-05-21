@@ -152,11 +152,14 @@ line for them to paste once:
 
 ```text
 You are the Codex side of the temporal-phase workflow on Host B.
-Read workflows/temporal-phase/HANDOFF.md and follow it from now on.
+Read workflows/temporal-phase/HANDOFF.md, then run /temporal-phase-codex-sync.
+From now on, run /temporal-phase-codex-sync at every session start.
 ```
 
 After that one-time onboarding, future Phases never need a chat
-relay — the kickoff file is the only signal.
+relay — the kickoff file is the only signal. Codex does not need to
+stay online between Phases; `/temporal-phase-codex-sync` catches up on
+anything pending whenever Codex boots.
 
 #### Branch B — Phase open and in progress
 
@@ -192,8 +195,31 @@ workflows/temporal-phase/_coord/from-codex/. Commit + push.
 #### Branch C — Phase just closed (last artifact is `close.md`)
 
 Report COMPLETED vs BLOCKED_POSTEXEC from the close.md's `BatonNext:`
-line. Show its CompletionCriteria summary. Then ask the user whether
-they want to start the next Phase (re-enter Branch A) or stop.
+line. Show its CompletionCriteria summary.
+
+**Offer to archive the closed Phase's artifacts.** Ask the user:
+
+> Phase `<phase-id>` is closed (`<terminal-state>`). Archive its
+> artifacts to `_coord/archive/<phase-id>/` so the mailboxes stay
+> focused on the next Phase? (recommended, keeps git history intact)
+> [yes / no / not yet]
+
+If the user says yes:
+
+1. Run `python scripts/archive_phase.py <phase-id>`. Surface any FAIL.
+2. On PASS, stage + commit + push:
+
+   ```bash
+   git add -A workflows/temporal-phase/_coord/
+   git commit -m "archive: <phase-id> (<terminal-state>)"
+   git push origin master
+   ```
+
+3. Re-run `python scripts/check_baton_artifacts.py` to confirm
+   mailboxes are clean.
+
+Then ask the user whether they want to start the next Phase
+(re-enter Branch A) or stop.
 
 ### 5. Final summary
 

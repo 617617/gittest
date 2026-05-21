@@ -311,6 +311,75 @@ for "Agent A", "Agent B", "Agent C", "Agent D").
 
 ---
 
+## P18 — On-demand sync skill on the non-orchestrator side
+
+**Problem.** CC has a watcher + a one-command orchestrator. The other
+side (Codex) only has lane skills, so the user has no single command
+to ask "where are we" from that side — and if Codex was offline when
+CC pushed a kickoff, there is no mechanism for Codex to catch up on
+boot.
+
+**Shape.**
+- A Codex-side operational skill (e.g., `temporal-phase-codex-sync`)
+  registered in `.codex/skills.json` with `codexLane: true`.
+- The skill is **operational**, not a lane: it does NOT produce a
+  baton artifact. Document this in the skill's `## Writes` section
+  so the verifier's marker check still finds "Writes" but readers know
+  no artifact is produced.
+- Procedure: pull origin → run verifiers → list mailboxes → find the
+  latest artifact's `BatonNext:` → cross-reference against the
+  state→lane table → report next action (run lane X / waiting on
+  other side / no Phase open).
+- The HANDOFF for the non-orchestrator side names this skill as the
+  "every session start" entry. The orchestrator side's one-time
+  onboarding line mentions it.
+
+**Why it matters.** The non-orchestrator side does not need to stay
+online between Phases. The sync skill is how it catches up on
+anything pending whenever its CLI boots. This is the symmetric
+counterpart of the orchestrator skill's status-query mode.
+
+**Reference.**
+`workflows/temporal-phase/skills/temporal-phase-codex-sync/SKILL.md`;
+`.codex/skills.json` entry for it;
+`workflows/temporal-phase/HANDOFF.md` §2.2 "Boot procedure".
+
+---
+
+## P19 — Archive closed units on close
+
+**Problem.** Mailboxes accumulate artifacts as Phases close. Long-running
+projects (50+ closed Phases) hit checker slowdown, status-output
+clutter, and reviewer-navigation friction.
+
+**Shape.**
+- Archive directory under the coord root, e.g., `_coord/archive/`.
+- A script `scripts/archive_phase.py <phase-id>` that:
+  - Preconditions: close.md exists with terminal `BatonNext:`; no
+    other Phase is open.
+  - Action: move all `<phase-id>__*.md` from `from-cc/` and
+    `from-codex/` into `_coord/archive/<phase-id>/{from-cc,from-codex}/`.
+  - Does NOT commit — the caller does. (Lets the orchestrator wrap
+    the move + commit + push in one user-facing step.)
+- Artifact checker skips the archive directory (the mailboxes only
+  scan their own contents; archive is a sibling).
+- The orchestrator's Branch C ("Phase just closed") offers the
+  archive step right after reporting the close.
+- CHARTER documents the policy in a `## Archival policy` section.
+
+**Why preserve archived files.** Git history retains the move (it's
+just a rename), so audit trail is intact. Archived files remain
+greppable and `git log -- archive/<phase-id>/` works for forensic
+review.
+
+**Reference.**
+`scripts/archive_phase.py`;
+`scripts/check_baton_artifacts.py` directory-skip;
+`workflows/temporal-phase/CHARTER.md` §"Archival policy";
+`.claude/skills/temporal-phase-start/SKILL.md` Branch C.
+
+---
+
 ## P17 — Kickoff-as-artifact (no chat relay)
 
 **Problem.** The "start signal" of a new unit of work tends to live in

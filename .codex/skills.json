@@ -125,6 +125,11 @@
       "name": "temporal-phase-close",
       "path": "workflows/temporal-phase/skills/temporal-phase-close",
       "codexLane": true
+    },
+    {
+      "name": "temporal-phase-codex-sync",
+      "path": "workflows/temporal-phase/skills/temporal-phase-codex-sync",
+      "codexLane": true
     }
   ]
 }

@@ -67,18 +67,41 @@ a stable ID (`CC-NN`); `temporal-phase-close/SKILL.md` and
 ## Phase-id naming and concurrency
 
 - **Format.** Every Phase carries a `phase-id` matching the regex
-  `phase-\d+` (e.g., `phase-01`, `phase-12`). Codex picks the next
-  phase-id at the start of the blueprint lane.
+  `phase-\d+` (e.g., `phase-01`, `phase-12`). The phase-id is chosen
+  by CC in the kickoff artifact (see ROLES Step 0) and consumed by
+  Codex in the blueprint lane.
 - **One open Phase at a time.** A Phase is "open" from the moment its
-  first artifact lands in either mailbox until a matching `<phase-id>__close.md`
-  is written by Codex. Two phase-ids may **not** both be open at the
-  same time. To start the next Phase, the previous Phase must be closed.
+  first artifact (the kickoff) lands in `from-cc/` until a matching
+  `<phase-id>__close.md` is written by Codex. Two phase-ids may **not**
+  both be open at the same time. To start the next Phase, the previous
+  Phase must be closed.
 - **Enforcement.** `scripts/check_baton_artifacts.py` walks both
   mailboxes and fails the run if (a) any filename does not match
   `<phase-id>__<step-tag>.md`, (b) any phase-id violates the regex, or
   (c) more than one open Phase exists. The `temporal-phase-watch` skill
   runs this checker on every session boot, so violations surface
   immediately.
+
+## Archival policy
+
+Closed Phases (`COMPLETED` or `BLOCKED_*`) accumulate artifacts. Letting
+them sit in the live mailboxes makes the artifact checker scan stale
+files and clutters status output. The policy:
+
+- Once `<phase-id>__close.md` lands with a terminal `BatonNext:`, the
+  Phase becomes eligible for archival.
+- `scripts/archive_phase.py <phase-id>` moves all of that Phase's
+  artifacts from `from-cc/` and `from-codex/` into
+  `_coord/archive/<phase-id>/{from-cc,from-codex}/`, preserving the
+  original mailbox split.
+- Git history is preserved (a move is just a rename); the archived
+  artifacts remain auditable via `git log`.
+- The artifact checker ignores `_coord/archive/`; only the live
+  mailboxes are validated.
+- The archival step is offered by `/temporal-phase-start` Branch C
+  after a Phase closes. Skipping archival is allowed but not
+  recommended — long-running mailbox bloat will eventually slow
+  reviews.
 
 ## Isolation from blue-k-git-baton-testkit
 

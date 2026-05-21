@@ -1,0 +1,7 @@
+interface:
+  display_name: "Temporal Phase / Codex Sync (Codex)"
+  short_description: "Codex-side sync: pull, verify, scan mailbox, report next action. Operational only -- writes nothing to baton."
+  default_prompt: "Use $temporal-phase-codex-sync on Codex CLI startup on Host B, or any time you want to check what is pending."
+
+policy:
+  allow_implicit_invocation: false

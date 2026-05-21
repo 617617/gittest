@@ -94,6 +94,10 @@ def main() -> int:
             errors.append(f"missing mailbox directory: workflows/temporal-phase/_coord/{mailbox_name}/")
             continue
         for f in sorted(mailbox_path.iterdir()):
+            # Skip the archive directory (closed Phases live under
+            # _coord/archive/<phase-id>/, not directly under from-cc/from-codex).
+            if f.is_dir():
+                continue
             if not f.is_file() or f.name == ".gitkeep":
                 continue
             if f.suffix.lower() != ".md":
