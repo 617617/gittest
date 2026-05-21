@@ -38,6 +38,8 @@ BLOCKED_POSTEXEC               # terminal: still blocked after the second dual a
 ## Legal transitions
 
 ```text
+(no prior state)            -> DRAFTING_BLUEPRINT           (CC writes from-cc/<phase-id>__kickoff.md)
+
 DRAFTING_BLUEPRINT          -> PRE_AUDIT_R1                 (Codex delivers blueprint)
 
 PRE_AUDIT_R1                -> PRE_AUDIT_SYNTHESIS_R1       (both CC + Codex audits delivered)
@@ -84,6 +86,7 @@ PHASE_CLOSING               -> BLOCKED_POSTEXEC             (completion criteria
 
 | Transition | Driver | Note |
 |------------|--------|------|
+| `(no prior state) -> DRAFTING_BLUEPRINT` | CC | CC writes the kickoff artifact (`<phase-id>__kickoff.md` in `from-cc/`) carrying `BatonNext: DRAFTING_BLUEPRINT`; that is the only way a Phase legitimately starts |
 | `* -> PRE_AUDIT_R*`, `BLUEPRINT_REVISION_R*`, `PRE_AUDIT_SYNTHESIS_R*` | CC | CC is the pre-execution loop closure judge |
 | `* -> BLUEPRINT_ACCEPTED` | CC | the synthesizer signs the "acceptable" verdict |
 | `BLUEPRINT_ACCEPTED -> EXECUTING` | Codex | execution begins |

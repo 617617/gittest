@@ -159,23 +159,43 @@ ActualChanges:
 
 ## 6. Getting started
 
-When the user (or a closing previous Phase) kicks off a new Phase, you
-sit in `DRAFTING_BLUEPRINT`:
+Your Phase start signal is **always a kickoff file**, never a chat
+instruction.
 
-1. Read the source document's current Phase target (if any) and the
-   previous Phase's `close.md` (if any).
-2. Open the blueprint lane:
-   `workflows/temporal-phase/skills/temporal-phase-blueprint/SKILL.md` —
-   the `## Tools` section there delegates the real generation work to
-   the work-repo skill `temporal-stage-package-generator`. Follow its
-   procedure (or invoke that skill if it is available in your Codex
-   CLI's resolved skill set).
-3. Write the coord-side pointer file
-   `from-codex/<phase-id>__blueprint.md` with `BatonNext: PRE_AUDIT_R1`.
-4. Commit to the coord repo and push to `origin/master`.
+When CC writes `workflows/temporal-phase/_coord/from-cc/<phase-id>__kickoff.md`
+and pushes it, your watcher fires and you enter `DRAFTING_BLUEPRINT`.
+The kickoff carries:
 
-CC's side will pick up your blueprint on the next monitor tick (the
-monitor watches `_coord/from-codex/` in the coord repo).
+- `PhaseId:` — the phase id matching `phase-\d+` (this is your phase
+  id; do not invent your own).
+- `Goal:` — what this Phase aims to do.
+- `SourceAnchor:` — optional section pointer into the source workflow
+  document.
+- `PreviousPhaseClose:` — optional pointer to the previous Phase's
+  close.md (use it as predecessor context).
+
+Procedure:
+
+1. Read the kickoff completely.
+2. Resolve `SourceAnchor` (if any) and read that section of the source
+   document.
+3. Resolve `PreviousPhaseClose` (if any) and read it.
+4. Open the blueprint lane:
+   `workflows/temporal-phase/skills/temporal-phase-blueprint/SKILL.md`.
+   Its `## Tools` section delegates the real generation work to the
+   work-repo skill `temporal-stage-package-generator`. Follow its
+   procedure.
+5. Write the coord-side pointer file
+   `from-codex/<phase-id>__blueprint.md` with first line
+   `BatonNext: PRE_AUDIT_R1`.
+6. Commit to the coord repo and push to `origin/master`.
+
+CC's side will pick up your blueprint on the next monitor tick.
+
+**Do not** start a Phase without seeing the kickoff. If the user asks
+in chat to "start a Phase" without a kickoff in `from-cc/`, redirect
+them to run `/temporal-phase-start` on the CC side — that is the only
+sanctioned entry point.
 
 ## 7. Hard rules
 

@@ -63,81 +63,100 @@ artifacts in either mailbox without a matching `<phase-id>__close.md`.
 
 #### Branch A — No Phase open yet (both mailboxes empty of phase artifacts)
 
-This is the fresh-start path. Emit two blocks in the chat:
+This is the fresh-start path. The user supplies a phase-id + goal in
+chat; CC then writes a kickoff baton artifact and pushes it. Codex's
+watcher on the other host picks up the kickoff and enters
+`DRAFTING_BLUEPRINT` automatically. There is **no copy-paste relay**.
 
-**Block A1 — Codex Host B bootstrap (copy-paste to Codex)**
-
-````text
-You are the Codex side of the temporal-phase workflow on Host B.
-
-Bootstrap:
-
-1) Sync repo:
-   cd D:\code\gittest
-   git pull origin master
-
-2) Confirm registration (you should now see all 15 /temporal-phase-*
-   lanes in your skill list):
-   python scripts/verify_temporal_phase_skills.py
-   python scripts/check_baton_artifacts.py
-
-3) Read these files in order:
-   workflows/temporal-phase/HANDOFF.md             (your entry point)
-   workflows/temporal-phase/PATHS.md               (your row = Host B)
-   workflows/temporal-phase/CHARTER.md
-   workflows/temporal-phase/ROLES.md
-   workflows/temporal-phase/BATON.schema.md
-   workflows/temporal-phase/skills/temporal-phase-blueprint/SKILL.md
-     (in particular its ## Tools section — it delegates to the work-repo
-      skill temporal-stage-package-generator)
-
-4) Arm a monitor on workflows/temporal-phase/_coord/from-cc/ so you see
-   CC's audits / synthesis / repairs as they land.
-
-5) Reply with exactly one line:
-   "Codex ready on Host B for temporal-phase, waiting for Phase goal."
-
-Then wait. Do NOT draft a blueprint until I give you a specific Phase
-goal in the next message.
-````
-
-**Then prompt the user (in chat, not in a tool):**
+**Step A1 — prompt the user (in chat, not in a tool):**
 
 > Please provide:
 >   1. A phase-id matching `phase-\d+` (e.g., `phase-01`, `phase-11`).
 >   2. A short Phase goal description (1-3 sentences).
->
-> Once you paste those back, I'll generate the Phase-kickoff message
-> for you to send to Codex.
+>   3. (Optional) A source-document anchor: a short string identifying
+>      the section of the Temporal workflow doc this Phase implements.
+>   4. (Optional) The previous Phase's close.md path (if any).
 
-**Block A2 — emit AFTER the user replies with phase-id + goal**
+Wait for the user's reply.
 
-When the user supplies `<phase-id>` and `<goal>`, emit:
+**Step A2 — write the kickoff baton artifact.**
 
-````text
-<phase-id> goal:
-<goal>
+When the user supplies `<phase-id>`, `<goal>`, and (optionally)
+`<source-anchor>` / `<previous-close>`:
 
-Open the temporal-phase-blueprint lane:
-  - Follow its ## Tools section: switch focus to the Temporal work repo
-    (PATHS.md → Host B → temporal: → D:\code\temporal\), follow
-    temporal-stage-package-generator's procedure, produce the package
-    directory under
-      temporal:docs/skill-temporal-reorchestration/stage-loop-auto-packages/pending/<package-id>/
-    with the full Generator output (PACKAGE_CHARTER, scope,
-    HANDOFF_execute, HANDOFF_plan_review, GENERATION_REVIEW_REPORT,
-    stage-NN/{EXECUTE,scope,evidence}.md).
-  - Run the Generator's mandatory post-generation multi-agent review.
-  - Then write the coord-side pointer file
-    gittest:workflows/temporal-phase/_coord/from-codex/<phase-id>__blueprint.md
-    with first line "BatonNext: PRE_AUDIT_R1" and the fields per the
-    blueprint SKILL §3 "coord-side product".
-  - Commit + push to origin/master.
+1. Confirm `<phase-id>` matches `^phase-\d+$`. If not, ask again.
+2. Verify no other Phase is open (the artifact checker already gates
+   this; if a different open phase-id exists, surface the conflict and
+   stop).
+3. Write `workflows/temporal-phase/_coord/from-cc/<phase-id>__kickoff.md`
+   with the following body (substitute the user's values verbatim):
 
-Use phase-id `<phase-id>`. Do not start more than one Phase at a time.
-````
+   ````text
+   BatonNext: DRAFTING_BLUEPRINT
 
-substituting `<phase-id>` and `<goal>` verbatim.
+   # Phase <phase-id> — Kickoff
+
+   PhaseId: <phase-id>
+   StartedBy: CC (Host A)
+   StartedAt: <current ISO-8601 UTC timestamp>
+
+   Goal:
+   <goal>
+
+   SourceAnchor:
+   <source-anchor or "N/A">
+
+   PreviousPhaseClose:
+   <previous-close path resolved via PATHS.md, or "N/A (first Phase)">
+
+   Notes for Codex (blueprint lane):
+   - Follow `workflows/temporal-phase/skills/temporal-phase-blueprint/SKILL.md`.
+   - Its `## Tools` section delegates to the work-repo skill
+     `temporal-stage-package-generator`. Generator SKILL.md resolves
+     via `PATHS.md` to
+     `temporal:.codex/skills/temporal-stage-package-generator/SKILL.md`.
+   - Use phase-id `<phase-id>` consistently in package-id selection
+     and product filenames.
+   ````
+
+4. Stage, commit, and push:
+
+   ```bash
+   git add workflows/temporal-phase/_coord/from-cc/<phase-id>__kickoff.md
+   git commit -m "kickoff(<phase-id>): start Phase per temporal-phase workflow"
+   git push origin master
+   ```
+
+5. Run `python scripts/check_baton_artifacts.py` to confirm the kickoff
+   is well-formed (filename, BatonNext, mailbox routing, single open
+   Phase). If it FAILs, undo the commit and surface the error.
+
+**Step A3 — tell the user what happens next.**
+
+```text
+Kickoff pushed.
+  File:    workflows/temporal-phase/_coord/from-cc/<phase-id>__kickoff.md
+  Commit:  <short SHA>
+  State:   DRAFTING_BLUEPRINT (Codex's turn)
+
+Codex on Host B will detect the kickoff via its watcher and enter the
+temporal-phase-blueprint lane. No further action needed from you
+until Codex pushes the blueprint pointer to from-codex/. You will be
+notified when that arrives.
+```
+
+**First-time Codex bootstrap (only if Codex has never been told about
+this workflow on Host B).** If the user mentions that Codex on Host B
+has never participated in temporal-phase before, also emit one short
+line for them to paste once:
+
+```text
+You are the Codex side of the temporal-phase workflow on Host B.
+Read workflows/temporal-phase/HANDOFF.md and follow it from now on.
+```
+
+After that one-time onboarding, future Phases never need a chat
+relay — the kickoff file is the only signal.
 
 #### Branch B — Phase open and in progress
 

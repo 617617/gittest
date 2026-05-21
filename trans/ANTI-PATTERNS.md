@@ -243,6 +243,43 @@ visibility. State both how-to paths in the lane SKILL.
 
 ---
 
+## A13 — Copy-paste relay between hosts as a coordination primitive
+
+**What we did.** The first version of the start workflow had CC emit a
+big "Codex bootstrap" text block and a "Phase kickoff" text block in
+chat; the user copied each block from CC's chat into Codex's chat to
+relay state.
+
+**Why it broke conceptually.** The "start signal" of a Phase is part
+of the workflow's truth. Anything part of workflow truth must live in
+git, not in chat. A chat-relayed instruction:
+
+- vanishes if either session restarts;
+- has no audit trail (you cannot diff what was relayed against what
+  the workflow says it should have been);
+- promotes the user from "decision-maker" to "manual transport" — a
+  role they should not have to play for fixed protocol traffic;
+- breaks the "git is the only truth source" promise the rest of the
+  protocol depends on.
+
+**What we changed it to.** Introduced a kickoff baton artifact
+(`from-cc/<phase-id>__kickoff.md`) carrying `BatonNext: DRAFTING_BLUEPRINT`,
+plus a Step 0 in ROLES, a new (no-prior-state) -> DRAFTING_BLUEPRINT
+transition in BATON.schema, and a step-tag in the artifact checker.
+The orchestrator skill writes + commits + pushes the kickoff itself;
+the other host's watcher fires; the first lane reads the kickoff as
+its trigger. The only chat relay that remains is a single one-time
+sentence to tell a brand-new Codex session "you are in `<preset>`,
+read HANDOFF.md".
+
+See PATTERNS P17 for the durable shape.
+
+**Lesson.** Any time you find yourself dictating multi-block paste
+from one AI to another, the protocol has a hole. Promote the relayed
+content to a baton artifact.
+
+---
+
 ## A12 — Mid-session memory drift: "all MD must be English"
 
 **What we did.** Wrote a workflow preset entirely in Chinese over many

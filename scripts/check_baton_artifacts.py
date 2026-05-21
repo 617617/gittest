@@ -51,6 +51,7 @@ BATON_STATES = {
 
 # step-tag regex → which mailbox it must live in
 CC_STEP_TAGS = [
+    re.compile(r"^kickoff$"),
     re.compile(r"^pre-audit-cc-r[123]$"),
     re.compile(r"^pre-audit-synthesis-r[123]$"),
     re.compile(r"^pre-audit-verdict-r[123]$"),

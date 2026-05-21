@@ -6,12 +6,20 @@ description: Codex creates the Phase execution blueprint. Trigger DRAFTING_BLUEP
 # temporal-phase / blueprint (Codex lane)
 
 ## Trigger
-- Baton state: `DRAFTING_BLUEPRINT`
+- Baton state: `DRAFTING_BLUEPRINT`, entered when a new
+  `from-cc/<phase-id>__kickoff.md` lands carrying
+  `BatonNext: DRAFTING_BLUEPRINT`. The kickoff artifact is the Phase
+  start signal; do not draft a blueprint until you see one.
 
 ## Reads
+- `workflows/temporal-phase/_coord/from-cc/<phase-id>__kickoff.md` —
+  the kickoff carries the Phase id, goal, optional source-doc anchor,
+  and (optional) reference to the previous Phase's close.md.
 - Authoritative source document — see the anchor path at the top of
-  `workflows/temporal-phase/CHARTER.md`, resolved via `PATHS.md`.
-- Previous Phase's `from-codex/<prev-phase-id>__close.md` if any.
+  `workflows/temporal-phase/CHARTER.md`, resolved via `PATHS.md`. Use
+  the kickoff's `SourceAnchor` field to find the relevant section.
+- Previous Phase's `from-codex/<prev-phase-id>__close.md` if the
+  kickoff names one.
 - You must follow the `## Tools` section below — **do not** hand-roll a
   blueprint from imagination.
 

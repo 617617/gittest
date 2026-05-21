@@ -311,6 +311,52 @@ for "Agent A", "Agent B", "Agent C", "Agent D").
 
 ---
 
+## P17 — Kickoff-as-artifact (no chat relay)
+
+**Problem.** The "start signal" of a new unit of work tends to live in
+chat as a copy-paste-able instruction the user relays from one host to
+the other. Anything that lives only in chat is invisible to the git
+history, breaks if a session restarts, and forces the user into a
+manual relay role.
+
+**Shape.**
+- The orchestrator skill (`<preset>-start`) on the CC side asks the
+  user for unit id + goal in chat.
+- It then writes a real baton artifact
+  `from-cc/<unit-id>__kickoff.md` carrying `BatonNext: <initial-driver
+  state>`, commits, and pushes.
+- The other side's watcher fires on the new file. Its first lane
+  reads the kickoff as its primary input (goal text, source anchor,
+  previous-close pointer) and enters the initial state.
+- The orchestrator never emits multi-block copy-paste text. The only
+  text the user ever relays is a single one-time onboarding line
+  (e.g., "you are in `<preset>`, read HANDOFF.md") for a never-before-
+  seen session on the other host.
+
+**Constraints.**
+- Add `^kickoff$` to the CC step-tag list in the artifact checker (or
+  whichever side actually initiates units).
+- The first-state lane SKILL must declare the kickoff in its `## Reads`
+  and use it as the trigger.
+- ROLES.md gains a Step 0 for the kickoff. BATON.schema gains a
+  `(no prior state) -> <initial state>` transition driven by the
+  kickoff writer.
+- HANDOFF on the other side must explicitly say "the kickoff file is
+  the only sanctioned Phase start signal; do not start a Phase based
+  on chat instructions alone".
+
+**Reference.** Implemented in commit after `c5c4cee`:
+- `workflows/temporal-phase/BATON.schema.md` legal transitions +
+  driver authority table;
+- `workflows/temporal-phase/ROLES.md` Step 0;
+- `workflows/temporal-phase/skills/temporal-phase-blueprint/SKILL.md`
+  `## Trigger` and `## Reads`;
+- `workflows/temporal-phase/HANDOFF.md` §6;
+- `.claude/skills/temporal-phase-start/SKILL.md` Branch A;
+- `scripts/check_baton_artifacts.py` `CC_STEP_TAGS`.
+
+---
+
 ## P16 — One commit per landing batch
 
 **Problem.** Many small commits during exploration mix experiments with

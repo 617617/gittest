@@ -20,7 +20,8 @@ Conventions:
 
 | # | Step | Driver | Input | Product | Mailbox |
 |---|------|--------|-------|---------|---------|
-| 1 | Create Phase execution blueprint | Codex | previous Phase close.md + source document | `<phase-id>__blueprint.md` (goal / scope / allowed files / validation / artifacts / risk) | from-codex/ |
+| 0 | Phase kickoff (start signal) | CC | user-supplied phase-id + goal + (optional) source-doc anchor | `<phase-id>__kickoff.md` (PhaseId / Goal / SourceAnchor / PreviousPhaseClose), `BatonNext: DRAFTING_BLUEPRINT` | from-cc/ |
+| 1 | Create Phase execution blueprint | Codex | `<phase-id>__kickoff.md` + previous Phase close.md + source document | `<phase-id>__blueprint.md` (goal / scope / allowed files / validation / artifacts / risk) | from-codex/ |
 | 2 | CC-side pre-execution audit | CC | blueprint | `<phase-id>__pre-audit-cc-r<N>.md` | from-cc/ |
 | 3 | Codex-side pre-execution audit | Codex | blueprint | `<phase-id>__pre-audit-codex-r<N>.md` | from-codex/ |
 | 4 | CC synthesizes pre-execution audit | CC | both pre-audit files | `<phase-id>__pre-audit-synthesis-r<N>.md` (Adopted / Recorded / Out-of-scope) | from-cc/ |
