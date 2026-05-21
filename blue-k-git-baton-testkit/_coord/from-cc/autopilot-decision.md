@@ -1,8 +1,15 @@
 Autopilot: enabled
 Mode: B
 ContinueWithoutReview: no
-DecisionRevision: 2
+DecisionRevision: 3
 ApprovedAt: 2026-05-21T06:25:00Z
+AmendedAt: 2026-05-21T06:45:00Z
+AmendmentReason: ai-chat-contract.md Rule 1 was ambiguous about which `Lane:`
+  value to print when refusing wrong-window. Codex announced the requested
+  lane (`blue-k-planner`) instead of its own owned lanes — defensible but
+  misleading because the announce is supposed to make the WindowMatch mismatch
+  visible. Contract is now clarified to require announcing this runtime's
+  OWNED lanes only. Re-read ai-chat-contract.md before scenario 3.
 BaseCommit: 6a5e3ed
 Scope: testkit v0.10 walk-through only — does NOT apply to real Blue-K work
 

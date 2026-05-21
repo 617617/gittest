@@ -34,6 +34,13 @@ I am <CC|Codex>. Lane: <lane-or-owned-lane-set>.
 
 - If the skill owns more than one lane in this invocation, list them
   space-separated on the same line.
+- The `<lane>` value is **what this runtime owns**, never the lane named in
+  the BATON / WindowMatch / ChatCommand the human just pasted. CC always
+  announces CC-owned lanes; Codex always announces Codex-owned lanes. This
+  rule holds even when the AI is about to refuse wrong-window input — the
+  whole point of the announce is to let the human compare against
+  `WindowMatch` and see the mismatch. Announcing the requested lane would
+  make a wrong-window paste look correct.
 
 The human matches this line against the `WindowMatch` hint printed by `bk sync`
 to confirm the paste landed in the correct window.
