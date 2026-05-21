@@ -67,3 +67,17 @@ It does not gate anything.
 - `temporal-phase` — sourced from
   `E:/code/temporal/docs/skill-temporal-reorchestration/current/execution/PHASE_COLLABORATIVE_EXECUTION_WORKFLOW_ZH_2026-05-21.md`,
   the Temporal project's Phase collaborative workflow.
+
+## Quick-start shortcuts (CC side)
+
+Each preset exposes a one-command orchestrator so the user does not need
+to memorize the bootstrap sequence:
+
+| Preset | One-command entry |
+|--------|-------------------|
+| `temporal-phase` | `/temporal-phase-start` |
+| `blue-k-git-baton-testkit` | `/bk-watch` (the testkit only has a watcher; the walkthrough is interactive) |
+
+The orchestrator skill diagnoses the current baton state and emits the
+exact next action (including any copy-paste text the user needs to send
+to the Codex side on the other host).

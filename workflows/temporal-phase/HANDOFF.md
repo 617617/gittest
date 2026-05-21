@@ -3,6 +3,13 @@
 Read this file first. It is the Codex entry point for the temporal-phase
 preset.
 
+> **CC-side shortcut for the user:** `/temporal-phase-start` is a CC
+> orchestrator skill that diagnoses the current baton state and emits
+> the right next action automatically (including the Codex-side
+> bootstrap text). The user does not need to remember any other command
+> on the CC side. This HANDOFF is what *you* (Codex) read; the user's
+> path through CC is `/temporal-phase-start`.
+
 ## 1. Where you are
 
 - Coord repo (this directory's repo): your machine's `gittest` repo root.
