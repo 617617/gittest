@@ -1,0 +1,25 @@
+# Two variants follow.  Save as agents/openai.yaml under the lane's
+# directory.
+
+# ---------------------------------------------------------------
+# Variant 1 — Codex-side lane (Codex actually executes this lane)
+# ---------------------------------------------------------------
+interface:
+  display_name: "<preset display> / <lane display> (Codex)"
+  short_description: "<short description.>"
+  default_prompt: "Use $<preset>-<lane> when baton is <STATE> to <one-sentence action>."
+
+policy:
+  allow_implicit_invocation: false
+
+
+# ---------------------------------------------------------------
+# Variant 2 — CC-only lane (Codex must refuse)
+# ---------------------------------------------------------------
+interface:
+  display_name: "<preset display> / <lane display> (CC)"
+  short_description: "<short description.> Codex must refuse this lane."
+  default_prompt: "This lane is CC-only. Codex must refuse -- <reason and where to route instead>."
+
+policy:
+  allow_implicit_invocation: false
