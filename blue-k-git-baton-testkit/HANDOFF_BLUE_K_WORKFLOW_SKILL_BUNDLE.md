@@ -238,6 +238,89 @@ If the other side has not finished:
 - review_pending must route to consensus/finalization rather than starting new
   package work.
 
+## Optional Unattended Codex Runner
+
+Yes, Codex can run without human interaction by using `codex exec`. OpenAI's
+Codex documentation describes this as the non-interactive mode for scripts and
+CI. It can take a prompt argument, read a full prompt from stdin with `-`, run
+with explicit sandbox settings, emit JSONL events, and write the final assistant
+message to a file.
+
+This is suitable for a future Blue-K unattended runner, but it must be treated
+as an optional controlled mode, not the default human-facing flow.
+
+Recommended shape:
+
+```text
+bk sync --unattended
+  -> shell validates BATON, remote heads, lease, role, clean worktree
+  -> shell writes a bounded prompt file for exactly one assignment
+  -> shell invokes codex exec against that prompt
+  -> shell validates the result, gates, branch heads, and worktree
+  -> shell pushes only if every post-run check passes
+```
+
+Example Codex invocation shape:
+
+```powershell
+Get-Content .blue-k\unattended_prompt.md |
+  codex exec - `
+    --cd . `
+    --sandbox workspace-write `
+    --ask-for-approval never `
+    --json `
+    --output-last-message .blue-k\unattended_result.md
+```
+
+Use `danger-full-access` only inside an isolated runner or VM. Prefer
+`workspace-write` for normal repository work. If the runner needs credentials,
+use environment-managed secrets; do not commit or print auth files or tokens.
+
+The prompt must be narrow. It should include:
+
+- the selected BATON task, lane, work branch, and expected head;
+- the exact project-local skill path to read;
+- the single assignment to execute;
+- required stop conditions;
+- required verification commands;
+- the rule that it may commit only the intended result;
+- the rule that it must not start another package after finishing.
+
+Unattended mode may push only when all of these are true:
+
+- `bk sync` selected an unattended-safe assignment;
+- local HEAD, origin work branch, and BATON work-branch head matched before the
+  run;
+- the worktree was clean before the run;
+- no takeover, stale lease, dirty resume, human approval, or risk acceptance is
+  required;
+- no plan/code `BLOCK`, `critical`, `fix_required`, `human_blocked`, or failed
+  gate remains;
+- post-run validation proves the expected files changed and the worktree is
+  clean after commit;
+- remote heads still match the pre-run expectations immediately before push;
+- atomic push is available for the work branch plus coordination branch, or the
+  wrapper deliberately disables unattended push.
+
+Do not use unattended mode for:
+
+- `/bk takeover`;
+- plan `WARN` requiring human risk acceptance;
+- lower-gate `BLOCK`;
+- code graph high-risk overlay changes needing human judgment;
+- conflicts, diverged branches, dirty local state, or missing upstream;
+- any task involving credentials, destructive filesystem actions, production
+  data, or ambiguous scope.
+
+Important implementation rule: Codex may run the work, but the shell-side baton
+wrapper owns the final push decision. The wrapper must re-check Git state after
+Codex exits. A model-written "I pushed" or "safe to push" sentence is not
+evidence by itself.
+
+If local `codex.exe` cannot be launched from a scheduler or shell, install/use
+the standalone Codex CLI or the Codex GitHub Action on the runner. The desktop
+app's bundled executable may not be a reliable automation entrypoint.
+
 ## Other Side Setup
 
 When registering these skills in another project, copy the whole directory:
@@ -273,4 +356,6 @@ The setup is acceptable when:
 - code review has a two-side review plus synthesis loop;
 - critical findings loop back to repair/fix and review again;
 - runner finalization stops after the current package;
-- no normal instruction asks the human to run manual `git pull`.
+- no normal instruction asks the human to run manual `git pull`;
+- unattended Codex execution, if enabled, is gated by the shell wrapper before
+  and after `codex exec`, with push blocked on any uncertain state.
